@@ -1,0 +1,227 @@
+5.20		- Released 2005-05-04
+		- pkgadd/rejmerge will now consider user, group and access
+		  permissions on rejected files.
+
+5.19		- Released 2005-03-29
+		- pkgadd: improved support for automatically removing
+		  rejected files that are identical to already installed files.
+		- pkgmk: added support for resuming interrupted downloads.
+		  Thanks to Johannes Winkelmann <jw@tks6.net>
+		- pkgmk: added option -cm/--check-md5sum, which checks the
+		  md5sum but does not build the package.
+		- libtar: fixed bug in symlink handling.
+		  Thanks to Guillaume Bibaut <guillaume.bibaut@free.fr>
+
+5.18		- Released 2004-05-16
+		- rejmerge: files created when merging will now get the same
+		  access permissions as the installed version.
+		  Thanks to Han Boetes <han@mijncomputer.nl>
+		- rejmerge: file diffs/merges are now piped through more(1).
+		- pkgadd/pkgrm: fixed a bug that could result in a corrupt 
+		  database when running low on disk space.
+		- pkgadd: directories can now be specified in rules in
+		  pkgadd.conf. (This fix was supposed to be part of the 5.14
+		  release, but was forgotten and actually never included).
+
+5.17		- Released 2004-05-10
+		- Fixed two bugs in rejmerge.
+
+5.16		- Released 2004-05-09
+		- pkgmk no longer redirects errors to /dev/null when removing
+		  the work dir.
+		- Minor man page updates.
+
+5.15		- Released 2004-05-02
+		- Fixed bug in makefile.
+
+5.14		- Released 2004-05-02
+		- Added new utility called rejmerge.
+		  See rejmerge(8) man page for more information.
+		- pkginfo -o now accepts regular expressions.
+		- Directories can now be specified in rules in pkgadd.conf.
+		- pkgadd/pkgrm now executes ldconfig after installing/removing
+                  a package.
+		- Minor cleanups.
+
+5.13		- Released 2003-12-16
+		- Removed "link to ..." from .footprint.
+		- pkgmk now allows the source=() array to be empty. This
+		  is useful for packages that only want create directory
+		  structures and/or symlinks.
+
+5.12		- Released 2003-11-30
+		- Added support for .nostrip, an optional file containing
+		  regular expressions matching files that should not be
+		  stripped. Thanks to Dave Hatton <mail@davehatton.it>
+
+5.11		- Released 2003-11-27
+		- Fixed bug in footprint generation.
+		- Fixed bug in file stripping.
+
+5.10		- Released 2003-11-08
+		- pkginfo: Added option -f/--footprint, which generates a
+		  package footprint. The old method for generating footprints
+		  failed in special cases.
+		- pkgmk: Updated to use pkginfo -f when creating footprints.
+		- pkgmk: Fixed bug in man page compression.
+		- pkgmk: Removed support for ROOT in Pkgfiles, use PKGMK_ROOT
+		  instead.
+		- pkgmk: Removed support for SOURCE_DIR, PACKAGE_DIR and
+		  WORK_DIR, use PKGMK_SOURCE_DIR, PKGMK_PACKAGE_DIR and
+		  PKGMK_WORK_DIR instead.
+
+5.9		- Released 2003-10-19
+		- Fixed bug in database backup code.
+		- Rejected files that are empty or equal to the already
+		  installed version are now automatically removed.
+
+5.8		- Released 2003-10-03
+		- Fixed memory leak in pkgadd.
+		- Patched libtar to fix memory leak.
+		- Patched libtar to reduce memory usage.
+		- Updated default pkgadd.conf.
+
+5.7		- Released 2003-07-31
+		- pkgmk: Reintroduced the $ROOT variable.
+
+5.6		- Released 2003-07-05
+		- pkgmk: Added automatic stripping of libraries (can be
+		  disabled with -ns/--no-strip).
+		- pkgmk: Added option -if/--ignore-footprint, which builds a
+		  package without checking the footprint.
+		- pkgmk: Synchronized names of variables exposed in pkgmk.conf
+		  to avoid potential conflicts. All variables now start with
+		  PKGMK_. The old names (SOURCE_DIR, PACKAGE_DIR and WORK_DIR)
+		  still work but this backwards compatibility will be removed
+		  in the future.
+
+5.5		- Released 2003-05-03
+		- pkgmk: Added support for alternative source, package and work
+		  directories. Variables SOURCE_DIR, PACKAGE_DIR and WORK_DIR
+		  can be set in /etc/pkgmk.conf.
+		  Thanks to Markus Ackermann <maol@symlink.ch>.
+		- Minor changes to some info/error messages.
+
+5.4		- Released 2003-03-09
+		- pkgmk: Added option -c/--clean, which removes the package
+		  and the downloaded source files.
+		- Upgraded bundled libtar from 1.2.10 to 1.2.11. This
+		  version of libtar fixes a spurious "permission denied"
+		  error, which sometimes occurred when running "pkgadd -u".
+
+5.3		- Released 2003-02-05
+		- pkgadd: the combination of -f and -u now respects the
+		  upgrade configuration in /etc/pkgadd.conf. This is
+		  needed to better support upgrades where ownership of
+		  files has been moved from one package to another.
+		- pkgadd/pkgrm/pkginfo: improved/reworked database locking
+		  and error handling.
+		- pkgmk: added -o to unzip to make it behave more like tar
+		  and avoid user intaraction when overwriting files.
+		  Thanks to Andreas Sundström <sunkan@zappa.cx>.
+		- Upgraded bundled libtar from 1.2.9 to 1.2.10.
+
+5.2		- Released 2002-12-08
+		- pkgmk: exports LC_ALL=POSIX to force utilities to use a
+		  neutral locate.
+		- Upgraded bundled libtar from 1.2.8 to 1.2.9.
+
+5.1		- Released 2002-10-27
+		- Upgraded bundled libtar from 1.2.5 to 1.2.8.
+		- pkgadd/pkgrm/pkginfo: Added file-locking on database to
+		  prevent more than one instance of pkgadd/pkgrm/pkginfo from
+		  running at the same time.
+		- pkgadd: Fixed a bug in libtar that caused segmentation fault
+		  when extracting files whose filenames contains characters
+		  with ascii value > 127.
+		- pkgmk: Fixed bug which caused suid/sgid binaries to become
+		  unstripped.
+		- pkgmk: Added option -ns/--no-strip. Use it to avoid stripping
+		  binaries in a package.
+		- pkginfo: -o/--owner does not require the whole path to the
+		  file anymore.
+
+5.0		- Released 2002-09-09
+		- Now requires GCC 3.2 to compile (due to STL incompatibility).
+		- pkginfo: -o/--owner now prepends the current directory to
+		  the file argument unless it starts with /. This feature is
+		  disable when using the -r/--root option.
+		- pkgmk: The build() function will now be aborted as soon
+		  as some command exits with an exit code other than 0 (zero).
+		- pkgmk: Binaries are now stripped automatically.
+		- pkgmk: Man pages are now compressed automatically.
+		- pkgmk: Symlinks are always given access permissions
+		  lrwxrwxrwx in .footprint, regardless of the actual
+		  access permissions. This avoids footprint problems
+		  when using e.g. XFS.
+
+4.4		- Released 2002-06-30
+		- Added option -cf, --config-file to pkgmk.
+		- Minor bugfixes.
+
+4.3		- Released 2002-06-11
+		- Removed Pkgfile.local-feature which was added in 4.2. It
+		  didn't work very well in some (common) situations.
+		- Corrected spelling errors in pkgmk.
+
+4.2		- Released 2002-05-17
+		- Added support for Pkgfile.local, which enables users to
+		  tweak packages by overriding parts of the original
+		  Pkgfile. This is useful when pkgmk is used in CRUX's
+		  ports system, where users will loose changes made to the
+		  original Pkgfile the next time they update their ports
+		  structure.
+		- Minor cleanups.
+
+4.1		- Released 2002-04-08
+		- Added support for preventing selected files (typically
+		  configuration files) from being overwritten when upgrading
+		  a package. The file /etc/pkgadd.conf, contains a list of
+		  rules with regular expressions specifying these files. These
+		  rules will be consulted when executing pkgadd with the
+		  option -u. Files that, according to the rules, shouldn't be
+		  upgraded will instead be installed under
+		  /var/lib/pkg/rejected/. The user can then examine, use and
+		  remove these files manually if so desired.
+		- Added md5sum checking (.md5sum contains the MD5 checksum of
+		  all source files). pkgmk uses this file to verify that
+		  the (potentially downloaded) source files are correct.
+		- Upgraded bundled libtar from 1.2.4 to 1.2.5.
+
+4.0.1		- Released 2002-01-20
+		- Removed warning "unable to remove XXX: Directory not empty"
+		  when upgrading a package.
+
+4.0		- Released 2002-01-14
+		- Packages are now identified by their names only (and
+		  not by name and version as before). This makes it easier
+		  for users to upgrade and remove packages. This, of course,
+		  comes with a price. You can not install two packages with
+		  the same name.
+		- The naming convention for packages is now:
+			name#version-release.pkg.tar.gz
+		  The character '#' is not allowed in package names, since
+		  it's used as the name/version delimiter.
+		- New database layout, which gives a more robust database
+		  with a transaction-like behaviour. This implementation
+		  will gurantee that the database will never be corrupted
+		  even if the power fails when pkgadd/pkgrm is running. It
+		  does however not guarantee that the database contents is
+		  in sync with the filesystem if such a crash should occur.
+		  This means that the database will _never_ loose track of
+		  files that are installed, but it can (in case of a crash)
+		  contain files that are actually not installed. Repeating
+		  the pkgadd/pkgrm command that was running when the crash
+		  occured will get the database in sync with the filesystem
+		  again.
+		- pkgmk is now capable of downloading missing source files
+		  (using wget) before building a package (option -d), given
+		  that the URL is specified in the "source" variable.
+		- pkg.build was renamed to Pkgfile (to mimic make/Makefile).
+		- pkg.contents was renamed to .footprint.
+		- pkgmk is now capable of installing/upgrading a package if
+		  the build was successful (option -i and -u).
+		- Lot's of minor fixes and cleanups.
+
+0.1 - 3.2.0	- Released 2000-05-10 - 2001-10-03
+		(No change log was maintained during this time)

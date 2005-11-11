@@ -1,0 +1,28 @@
+
+              pkgutils - Package Management Utilities
+
+               http://www.fukt.bth.se/~per/pkgutils/
+
+
+Description
+-----------
+pkgutils is a set of utilities (pkgadd, pkgrm, pkginfo, pkgmk and rejmerge),
+which are used for managing software packages in Linux. It is developed for
+and used by the CRUX distribution (http://crux.nu).
+
+
+Building and installing
+-----------------------
+$ make
+$ make install
+or
+$ make DESTDIR=/some/other/path install
+
+
+Copyright
+---------
+pkgutils is Copyright (c) 2000-2005 Per Liden and is licensed through the
+GNU General Public License. Read the COPYING file for the complete license.
+
+pkgutils uses libtar, a library for reading/writing tar-files. This
+library is Copyright (c) 1998-2003 Mark D. Roth.
