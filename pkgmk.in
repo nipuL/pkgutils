@@ -25,11 +25,11 @@ info() {
 }
 
 warning() {
-	info "WARNING: $1"
+	info "WARNING: $1" >&2
 }
 
 error() {
-	info "ERROR: $1"
+	info "ERROR: $1" >&2
 }
 
 get_filename() {
@@ -194,7 +194,7 @@ check_md5sum() {
 			sed 's/^-/MISSING   /g' > $FILE.md5sum.diff
 		if [ -s $FILE.md5sum.diff ]; then
 			error "Md5sum mismatch found:"
-			cat $FILE.md5sum.diff
+			cat $FILE.md5sum.diff >&2
 
 			if [ "$PKGMK_KEEP_WORK" = "no" ]; then
 				rm -rf $PKGMK_WORK_DIR
@@ -294,7 +294,7 @@ check_footprint() {
 				sed 's/^-/MISSING   /g' > $FILE.footprint.diff
 			if [ -s $FILE.footprint.diff ]; then
 				error "Footprint mismatch found:"
-				cat $FILE.footprint.diff
+				cat $FILE.footprint.diff >&2
 				BUILD_SUCCESSFUL="no"
 			fi
 		else
