@@ -1,3 +1,4 @@
 2006-04-14 Tilman Sauerbeck (tilman at crux nu)
         * ChangeLog, NEWS: Moved old ChangeLog to NEWS
         * pkgmk.in: Write warnings and errors to stderr instead of stdout
+        * pkgutil.cc: Use the proper sentinel in the execl() call

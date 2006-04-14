@@ -435,7 +435,7 @@ void pkgutil::ldconfig() const
 			throw runtime_error_with_errno("fork() failed");
 
 		if (pid == 0) {
-			execl(LDCONFIG, LDCONFIG, "-r", root.c_str(), 0);
+			execl(LDCONFIG, LDCONFIG, "-r", root.c_str(), (char *) 0);
 			const char* msg = strerror(errno);
 			cerr << utilname << ": could not execute " << LDCONFIG << ": " << msg << endl;
 			exit(EXIT_FAILURE);
