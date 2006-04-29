@@ -242,13 +242,16 @@ strip_files() {
 	fi
 
 	find . -type f -printf "%P\n" | $FILTER | while read FILE; do
-		if file -b "$FILE" | grep '^.*ELF.*executable.*not stripped$' &> /dev/null; then
+		case $(file -b "$FILE") in
+		*ELF*executable*not\ stripped)
 			strip --strip-all "$FILE"
-		elif file -b "$FILE" | grep '^.*ELF.*shared object.*not stripped$' &> /dev/null; then
+			;;
+		*ELF*shared\ object*not\ stripped)
 			strip --strip-unneeded "$FILE"
-		elif file -b "$FILE" | grep '^current ar archive$' &> /dev/null; then
+			;;
+		current\ ar\ archive)
 			strip --strip-debug "$FILE"
-		fi
+		esac
 	done
 }
 
