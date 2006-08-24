@@ -142,7 +142,7 @@ vector<rule_t> pkgadd::read_config() const
 
 				if (!strcmp(event, "UPGRADE")) {
 					rule_t rule;
-					rule.event = rule_t::UPGRADE;
+					rule.event = UPGRADE;
 					rule.pattern = pattern;
 					if (!strcmp(action, "YES")) {
 						rule.action = true;
@@ -175,21 +175,17 @@ vector<rule_t> pkgadd::read_config() const
 set<string> pkgadd::make_keep_list(const set<string>& files, const vector<rule_t>& rules) const
 {
 	set<string> keep_list;
+	vector<rule_t> found;
+
+	find_rules(rules, UPGRADE, found);
 
 	for (set<string>::const_iterator i = files.begin(); i != files.end(); i++) {
-		for (vector<rule_t>::const_reverse_iterator j = rules.rbegin(); j != rules.rend(); j++) {
-			if ((*j).event == rule_t::UPGRADE) {
-				regex_t preg;
-				if (regcomp(&preg, (*j).pattern.c_str(), REG_EXTENDED | REG_NOSUB))
-					throw runtime_error("error compiling regular expression '" + (*j).pattern + "', aborting");
+		for (vector<rule_t>::reverse_iterator j = found.rbegin(); j != found.rend(); j++) {
+			if (rule_applies_to_file(*j, *i)) {
+				if (!(*j).action)
+					keep_list.insert(keep_list.end(), *i);
 
-				if (!regexec(&preg, (*i).c_str(), 0, 0, 0)) {
-					if (!(*j).action)
-						keep_list.insert(keep_list.end(), *i);
-					regfree(&preg);
-					break;
-				}
-				regfree(&preg);
+				break;
 			}
 		}
 	}
@@ -203,4 +199,25 @@ set<string> pkgadd::make_keep_list(const set<string>& files, const vector<rule_t
 #endif
 
 	return keep_list;
+}
+
+void pkgadd::find_rules(const vector<rule_t>& rules, rule_event_t event, vector<rule_t>& found) const
+{
+	for (vector<rule_t>::const_iterator i = rules.begin(); i != rules.end(); i++)
+		if (i->event == event)
+			found.push_back(*i);
+}
+
+bool pkgadd::rule_applies_to_file(const rule_t& rule, const string& file) const
+{
+	regex_t preg;
+	bool ret;
+
+	if (regcomp(&preg, rule.pattern.c_str(), REG_EXTENDED | REG_NOSUB))
+		throw runtime_error("error compiling regular expression '" + rule.pattern + "', aborting");
+
+	ret = !regexec(&preg, file.c_str(), 0, 0, 0);
+	regfree(&preg);
+
+	return ret;
 }
