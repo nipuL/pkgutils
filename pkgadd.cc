@@ -78,6 +78,7 @@ void pkgadd::run(int argc, char** argv)
 		else if (!installed && o_upgrade)
 			throw runtime_error("package " + package.first + " not previously installed (skip -u to install)");
       
+		set<string> non_install_files = apply_install_rules(package.first, package.second, config_rules);
 		set<string> conflicting_files = db_find_conflicts(package.first, package.second);
       
 		if (!conflicting_files.empty()) {
@@ -101,7 +102,7 @@ void pkgadd::run(int argc, char** argv)
    
 		db_add_pkg(package.first, package.second);
 		db_commit();
-		pkg_install(o_package, keep_list);
+		pkg_install(o_package, keep_list, non_install_files);
 		ldconfig();
 	}
 }
@@ -140,9 +141,9 @@ vector<rule_t> pkgadd::read_config() const
 				if (sscanf(line.c_str(), "%s %s %s %s", event, pattern, action, dummy) != 3)
 					throw runtime_error(filename + ":" + itos(linecount) + ": wrong number of arguments, aborting");
 
-				if (!strcmp(event, "UPGRADE")) {
+				if (!strcmp(event, "UPGRADE") || !strcmp(event, "INSTALL")) {
 					rule_t rule;
-					rule.event = UPGRADE;
+					rule.event = strcmp(event, "UPGRADE") ? INSTALL : UPGRADE;
 					rule.pattern = pattern;
 					if (!strcmp(action, "YES")) {
 						rule.action = true;
@@ -199,6 +200,51 @@ set<string> pkgadd::make_keep_list(const set<string>& files, const vector<rule_t
 #endif
 
 	return keep_list;
+}
+
+set<string> pkgadd::apply_install_rules(const string& name, pkginfo_t& info, const vector<rule_t>& rules)
+{
+	// TODO: better algo(?)
+	set<string> install_set;
+	set<string> non_install_set;
+	vector<rule_t> found;
+
+	find_rules(rules, INSTALL, found);
+
+	for (set<string>::const_iterator i = info.files.begin(); i != info.files.end(); i++) {
+		bool install_file = true;
+
+		for (vector<rule_t>::reverse_iterator j = found.rbegin(); j != found.rend(); j++) {
+			if (rule_applies_to_file(*j, *i)) {
+				install_file = (*j).action;
+				break;
+			}
+		}
+
+		if (install_file)
+			install_set.insert(install_set.end(), *i);
+		else
+			non_install_set.insert(*i);
+	}
+
+	info.files.clear();
+	info.files = install_set;
+
+#ifndef NDEBUG
+	cerr << "Install set:" << endl;
+	for (set<string>::iterator j = info.files.begin(); j != info.files.end(); j++) {
+		cerr << "   " << (*j) << endl;
+	}
+	cerr << endl;
+
+	cerr << "Non-Install set:" << endl;
+	for (set<string>::iterator j = non_install_set.begin(); j != non_install_set.end(); j++) {
+		cerr << "   " << (*j) << endl;
+	}
+	cerr << endl;
+#endif
+
+	return non_install_set;
 }
 
 void pkgadd::find_rules(const vector<rule_t>& rules, rule_event_t event, vector<rule_t>& found) const

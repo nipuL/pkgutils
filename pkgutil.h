@@ -70,7 +70,7 @@ protected:
 
 	// Tar.gz
 	pair<string, pkginfo_t> pkg_open(const string& filename) const;
-	void pkg_install(const string& filename, const set<string>& keep_list) const;
+	void pkg_install(const string& filename, const set<string>& keep_list, const set<string>& non_install_files) const;
 	void pkg_footprint(string& filename) const;
 	void ldconfig() const;
 

@@ -368,7 +368,7 @@ pair<string, pkgutil::pkginfo_t> pkgutil::pkg_open(const string& filename) const
 	return result;
 }
 
-void pkgutil::pkg_install(const string& filename, const set<string>& keep_list) const
+void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, const set<string>& non_install_list) const
 {
 	TAR* t;
 	unsigned int i;
@@ -381,6 +381,14 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list) 
 		string reject_dir = trim_filename(root + string("/") + string(PKG_REJECTED));
 		string original_filename = trim_filename(root + string("/") + archive_filename);
 		string real_filename = original_filename;
+
+		// Check if file is filtered out via INSTALL
+		if (non_install_list.find(archive_filename) != non_install_list.end()) {
+			if (TH_ISREG(t))
+				tar_skip_regfile(t);
+
+			continue;
+		}
 
 		// Check if file should be rejected
 		if (file_exists(real_filename) && keep_list.find(archive_filename) != keep_list.end())

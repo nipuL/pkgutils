@@ -30,7 +30,8 @@
 #define PKGADD_CONF_MAXLINE     1024
 
 enum rule_event_t {
-	UPGRADE
+	UPGRADE,
+	INSTALL
 };
 
 struct rule_t {
@@ -48,6 +49,7 @@ public:
 private:
 	vector<rule_t> read_config() const;
 	set<string> make_keep_list(const set<string>& files, const vector<rule_t>& rules) const;
+	set<string> apply_install_rules(const string& name, pkginfo_t& info, const vector<rule_t>& rules);
 	void find_rules(const vector<rule_t>& rules, rule_event_t event, vector<rule_t>& found) const;
 	bool rule_applies_to_file(const rule_t& rule, const string& file) const;
 };
