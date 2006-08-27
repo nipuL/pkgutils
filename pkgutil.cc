@@ -384,6 +384,8 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 
 		// Check if file is filtered out via INSTALL
 		if (non_install_list.find(archive_filename) != non_install_list.end()) {
+			cout << utilname << ": ignoring " << archive_filename << endl;
+
 			if (TH_ISREG(t))
 				tar_skip_regfile(t);
 
