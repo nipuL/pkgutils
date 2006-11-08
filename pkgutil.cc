@@ -349,7 +349,7 @@ pair<string, pkgutil::pkginfo_t> pkgutil::pkg_open(const string& filename) const
 	if (archive_read_open_filename(archive,
 	    const_cast<char*>(filename.c_str()),
 	    ARCHIVE_DEFAULT_BYTES_PER_BLOCK) != ARCHIVE_OK)
-		throw runtime_error_with_errno("could not open " + filename);
+		throw runtime_error_with_errno("could not open " + filename, archive_errno(archive));
 
 	for (i = 0; archive_read_next_header(archive, &entry) ==
 	     ARCHIVE_OK; ++i) {
@@ -362,7 +362,7 @@ pair<string, pkgutil::pkginfo_t> pkgutil::pkg_open(const string& filename) const
 
 		if (S_ISREG(status->st_mode) &&
 		    archive_read_data_skip(archive) != ARCHIVE_OK)
-			throw runtime_error_with_errno("could not read " + filename);
+			throw runtime_error_with_errno("could not read " + filename, archive_errno(archive));
 	}
    
 	if (i == 0) {
@@ -390,7 +390,7 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 	if (archive_read_open_filename(archive,
 	    const_cast<char*>(filename.c_str()),
 	    ARCHIVE_DEFAULT_BYTES_PER_BLOCK) != ARCHIVE_OK)
-		throw runtime_error_with_errno("could not open " + filename);
+		throw runtime_error_with_errno("could not open " + filename, archive_errno(archive));
 
 	chdir(root.c_str());
 
@@ -499,7 +499,7 @@ void pkgutil::pkg_footprint(string& filename) const
 	if (archive_read_open_filename(archive,
 	    const_cast<char*>(filename.c_str()),
 	    ARCHIVE_DEFAULT_BYTES_PER_BLOCK) != ARCHIVE_OK)
-                throw runtime_error_with_errno("could not open " + filename);
+                throw runtime_error_with_errno("could not open " + filename, archive_errno(archive));
 
 	for (i = 0; archive_read_next_header(archive, &entry) ==
 	     ARCHIVE_OK; ++i) {
@@ -559,7 +559,7 @@ void pkgutil::pkg_footprint(string& filename) const
 		
 		if (S_ISREG(status->st_mode) &&
 		    archive_read_data_skip(archive))
-                        throw runtime_error_with_errno("could not read " + filename);
+                        throw runtime_error_with_errno("could not read " + filename, archive_errno(archive));
         }
    
         if (i == 0) {

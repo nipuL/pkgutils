@@ -91,6 +91,8 @@ class runtime_error_with_errno : public runtime_error {
 public:
 	explicit runtime_error_with_errno(const string& msg) throw()
 		: runtime_error(msg + string(": ") + strerror(errno)) {}
+	explicit runtime_error_with_errno(const string& msg, int e) throw()
+		: runtime_error(msg + string(": ") + strerror(e)) {}
 };
 
 // Utility functions
