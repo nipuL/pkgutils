@@ -1,0 +1,7 @@
+.depend
+*.o
+*.8
+pkgadd
+pkgmk
+rejmerge
+
