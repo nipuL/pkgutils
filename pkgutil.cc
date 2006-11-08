@@ -488,7 +488,7 @@ void pkgutil::ldconfig() const
 
 void pkgutil::pkg_footprint(string& filename) const
 {
-        unsigned int i;
+	unsigned int i;
 	struct archive* archive;
 	struct archive_entry* entry;
 
@@ -557,17 +557,16 @@ void pkgutil::pkg_footprint(string& filename) const
 
 		cout << '\n';
 		
-		if (S_ISREG(status->st_mode) &&
-		    archive_read_data_skip(archive))
-                        throw runtime_error_with_errno("could not read " + filename, archive_errno(archive));
-        }
+		if (S_ISREG(status->st_mode) && archive_read_data_skip(archive))
+			throw runtime_error_with_errno("could not read " + filename, archive_errno(archive));
+	}
    
-        if (i == 0) {
+	if (i == 0) {
 		if (archive_errno(archive) == 0)
-                        throw runtime_error("empty package");
-                else
-                        throw runtime_error("could not read " + filename);
-        }
+			throw runtime_error("empty package");
+		else
+			throw runtime_error("could not read " + filename);
+	}
 
 	archive_read_finish(archive);
 }
