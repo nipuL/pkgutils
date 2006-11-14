@@ -29,7 +29,8 @@ LIBTAR_VERSION = 1.2.11
 
 CXXFLAGS += -DNDEBUG
 CXXFLAGS += -O2 -Wall -pedantic -D_GNU_SOURCE -DVERSION=\"$(VERSION)\" \
-	    -Ilibtar-$(LIBTAR_VERSION)/lib -Ilibtar-$(LIBTAR_VERSION)/listhash
+	    -Ilibtar-$(LIBTAR_VERSION)/lib -Ilibtar-$(LIBTAR_VERSION)/listhash \
+	    -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
 LDFLAGS += -static -Llibtar-$(LIBTAR_VERSION)/lib -ltar -lz
 
