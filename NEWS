@@ -1,3 +1,12 @@
+5.21    - Released 2006-11-15
+        - pkgmk now writes warnings and errors to stderr instead of
+          stdout (Tilman Sauerbeck)
+        - Optimized file type detection for stripping in pkgmk
+          (Antti Nykänen)
+        - Added INSTALL rule support
+          (Johannes Winkelmann, Tilman Sauerbeck)
+
+
 5.20		- Released 2005-05-04
 		- pkgadd/rejmerge will now consider user, group and access
 		  permissions on rejected files.
