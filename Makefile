@@ -80,6 +80,7 @@ endif
 dist: distclean
 	rm -rf /tmp/pkgutils-$(VERSION)
 	mkdir -p /tmp/pkgutils-$(VERSION)
+	git-log > ChangeLog
 	cp -rf . /tmp/pkgutils-$(VERSION)
 	tar -C /tmp --exclude .svn -czvf ../pkgutils-$(VERSION).tar.gz pkgutils-$(VERSION)
 	rm -rf /tmp/pkgutils-$(VERSION)
