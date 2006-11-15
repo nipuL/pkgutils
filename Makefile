@@ -25,33 +25,20 @@ MANDIR = /usr/man
 ETCDIR = /etc
 
 VERSION = 5.21
-LIBTAR_VERSION = 1.2.11
 
 CXXFLAGS += -DNDEBUG
 CXXFLAGS += -O2 -Wall -pedantic -D_GNU_SOURCE -DVERSION=\"$(VERSION)\" \
-	    -Ilibtar-$(LIBTAR_VERSION)/lib -Ilibtar-$(LIBTAR_VERSION)/listhash \
 	    -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 
-LDFLAGS += -static -Llibtar-$(LIBTAR_VERSION)/lib -ltar -lz
+LDFLAGS += -static -larchive -lz -lbz2
 
 OBJECTS = main.o pkgutil.o pkgadd.o pkgrm.o pkginfo.o
 
 MANPAGES = pkgadd.8 pkgrm.8 pkginfo.8 pkgmk.8 rejmerge.8
 
-LIBTAR = libtar-$(LIBTAR_VERSION)/lib/libtar.a
-
 all: pkgadd pkgmk rejmerge man
 
-$(LIBTAR):
-	(tar xzf libtar-$(LIBTAR_VERSION).tar.gz; \
-	cd libtar-$(LIBTAR_VERSION); \
-	patch -p1 < ../libtar-$(LIBTAR_VERSION)-fix_mem_leak.patch; \
-	patch -p1 < ../libtar-$(LIBTAR_VERSION)-reduce_mem_usage.patch; \
-	patch -p1 < ../libtar-$(LIBTAR_VERSION)-fix_linkname_overflow.patch; \
-	LDFLAGS="" ./configure --disable-encap --disable-encap-install; \
-	make)
-
-pkgadd: $(LIBTAR) .depend $(OBJECTS)
+pkgadd: .depend $(OBJECTS)
 	$(CXX) $(OBJECTS) -o $@ $(LDFLAGS)
 
 pkgmk: pkgmk.in
@@ -108,6 +95,5 @@ clean:
 
 distclean: clean
 	rm -f pkgadd pkginfo pkgrm pkgmk rejmerge
-	rm -rf libtar-$(LIBTAR_VERSION)
 
 # End of file

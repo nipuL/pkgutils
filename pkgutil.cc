@@ -40,16 +40,10 @@
 #include <fcntl.h>
 #include <zlib.h>
 #include <libgen.h>
-#include <libtar.h>
+#include <archive.h>
+#include <archive_entry.h>
 
 using __gnu_cxx::stdio_filebuf;
-
-static tartype_t gztype = {
-	(openfunc_t)unistd_gzopen,
-	(closefunc_t)gzclose,
-	(readfunc_t)gzread,
-	(writefunc_t)gzwrite
-};
 
 pkgutil::pkgutil(const string& name)
 	: utilname(name)
@@ -333,7 +327,8 @@ pair<string, pkgutil::pkginfo_t> pkgutil::pkg_open(const string& filename) const
 {
 	pair<string, pkginfo_t> result;
 	unsigned int i;
-	TAR* t;
+	struct archive* archive;
+	struct archive_entry* entry;
 
 	// Extract name and version from filename
 	string basename(filename, filename.rfind('/') + 1);
@@ -347,47 +342,75 @@ pair<string, pkgutil::pkginfo_t> pkgutil::pkg_open(const string& filename) const
 	result.first = name;
 	result.second.version = version;
 
-	if (tar_open(&t, const_cast<char*>(filename.c_str()), &gztype, O_RDONLY, 0, TAR_GNU) == -1)
+	archive = archive_read_new();
+	archive_read_support_compression_all(archive);
+	archive_read_support_format_all(archive);
+
+	if (archive_read_open_filename(archive,
+	    const_cast<char*>(filename.c_str()),
+	    ARCHIVE_DEFAULT_BYTES_PER_BLOCK) != ARCHIVE_OK)
 		throw runtime_error_with_errno("could not open " + filename);
 
-	for (i = 0; !th_read(t); ++i) {
-		result.second.files.insert(result.second.files.end(), th_get_pathname(t));
-		if (TH_ISREG(t) && tar_skip_regfile(t))
+	for (i = 0; archive_read_next_header(archive, &entry) ==
+	     ARCHIVE_OK; ++i) {
+		const struct stat* status;
+
+		result.second.files.insert(result.second.files.end(),
+		                           archive_entry_pathname(entry));
+
+		status = archive_entry_stat(entry);
+
+		if (S_ISREG(status->st_mode) &&
+		    archive_read_data_skip(archive) != ARCHIVE_OK)
 			throw runtime_error_with_errno("could not read " + filename);
 	}
    
 	if (i == 0) {
-		if (errno == 0)
+		if (archive_errno(archive) == 0)
 			throw runtime_error("empty package");
 		else
 			throw runtime_error("could not read " + filename);
 	}
 
-	tar_close(t);
+	archive_read_finish(archive);
 
 	return result;
 }
 
 void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, const set<string>& non_install_list) const
 {
-	TAR* t;
+	struct archive* archive;
+	struct archive_entry* entry;
 	unsigned int i;
 
-	if (tar_open(&t, const_cast<char*>(filename.c_str()), &gztype, O_RDONLY, 0, TAR_GNU) == -1)
+	archive = archive_read_new();
+	archive_read_support_compression_all(archive);
+	archive_read_support_format_all(archive);
+
+	if (archive_read_open_filename(archive,
+	    const_cast<char*>(filename.c_str()),
+	    ARCHIVE_DEFAULT_BYTES_PER_BLOCK) != ARCHIVE_OK)
 		throw runtime_error_with_errno("could not open " + filename);
 
-	for (i = 0; !th_read(t); ++i) {
-		string archive_filename = th_get_pathname(t);
+	chdir(root.c_str());
+
+	for (i = 0; archive_read_next_header(archive, &entry) ==
+	     ARCHIVE_OK; ++i) {
+		string archive_filename = archive_entry_pathname(entry);
 		string reject_dir = trim_filename(root + string("/") + string(PKG_REJECTED));
 		string original_filename = trim_filename(root + string("/") + archive_filename);
 		string real_filename = original_filename;
 
 		// Check if file is filtered out via INSTALL
 		if (non_install_list.find(archive_filename) != non_install_list.end()) {
+			const struct stat* status;
+
 			cout << utilname << ": ignoring " << archive_filename << endl;
 
-			if (TH_ISREG(t))
-				tar_skip_regfile(t);
+			status = archive_entry_stat(entry);
+
+			if (S_ISREG(status->st_mode))
+				archive_read_data_skip(archive);
 
 			continue;
 		}
@@ -396,11 +419,15 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 		if (file_exists(real_filename) && keep_list.find(archive_filename) != keep_list.end())
 			real_filename = trim_filename(reject_dir + string("/") + archive_filename);
 
+		archive_entry_set_pathname(entry, const_cast<char*>
+		                           (real_filename.c_str()));
+
 		// Extract file
-		if (tar_extract_file(t, const_cast<char*>(real_filename.c_str()))) {
+		if (archive_read_extract(archive, entry, 0) !=
+		    ARCHIVE_OK) {
 			// If a file fails to install we just print an error message and
 			// continue trying to install the rest of the package.
-			const char* msg = strerror(errno);
+			const char* msg = archive_error_string(archive);
 			cerr << utilname << ": could not install " + archive_filename << ": " << msg << endl;
 			continue;
 		}
@@ -408,9 +435,12 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 		// Check rejected file
 		if (real_filename != original_filename) {
 			bool remove_file = false;
+			const struct stat* status;
+
+			status = archive_entry_stat(entry);
 
 			// Directory
-			if (TH_ISDIR(t))
+			if (S_ISDIR(status->st_mode))
 				remove_file = permissions_equal(real_filename, original_filename);
 			// Other files
 			else
@@ -426,13 +456,13 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 	}
 
 	if (i == 0) {
-		if (errno == 0)
+		if (archive_errno(archive) == 0)
 			throw runtime_error("empty package");
 		else
 			throw runtime_error("could not read " + filename);
 	}
 
-	tar_close(t);
+	archive_read_finish(archive);
 }
 
 void pkgutil::ldconfig() const
@@ -459,25 +489,37 @@ void pkgutil::ldconfig() const
 void pkgutil::pkg_footprint(string& filename) const
 {
         unsigned int i;
-        TAR* t;
+	struct archive* archive;
+	struct archive_entry* entry;
 
-        if (tar_open(&t, const_cast<char*>(filename.c_str()), &gztype, O_RDONLY, 0, TAR_GNU) == -1)
+	archive = archive_read_new();
+	archive_read_support_compression_all(archive);
+	archive_read_support_format_all(archive);
+
+	if (archive_read_open_filename(archive,
+	    const_cast<char*>(filename.c_str()),
+	    ARCHIVE_DEFAULT_BYTES_PER_BLOCK) != ARCHIVE_OK)
                 throw runtime_error_with_errno("could not open " + filename);
 
-        for (i = 0; !th_read(t); ++i) {
+	for (i = 0; archive_read_next_header(archive, &entry) ==
+	     ARCHIVE_OK; ++i) {
+		const struct stat* status;
+
+		status = archive_entry_stat(entry);
+
 		// Access permissions
-		if (TH_ISSYM(t)) {
+		if (S_ISLNK(status->st_mode)) {
 			// Access permissions on symlinks differ among filesystems, e.g. XFS and ext2 have different.
 			// To avoid getting different footprints we always use "lrwxrwxrwx".
 			cout << "lrwxrwxrwx";
 		} else {
-			cout << mtos(th_get_mode(t));
+			cout << mtos(archive_entry_mode(entry));
 		}
 
 		cout << '\t';
 
 		// User
-		uid_t uid = th_get_uid(t);
+		uid_t uid = archive_entry_uid(entry);
 		struct passwd* pw = getpwuid(uid);
 		if (pw)
 			cout << pw->pw_name;
@@ -487,7 +529,7 @@ void pkgutil::pkg_footprint(string& filename) const
 		cout << '/';
 
 		// Group
-		gid_t gid = th_get_gid(t);
+		gid_t gid = archive_entry_gid(entry);
 		struct group* gr = getgrgid(gid);
 		if (gr)
 			cout << gr->gr_name;
@@ -495,34 +537,39 @@ void pkgutil::pkg_footprint(string& filename) const
 			cout << gid;
 
 		// Filename
-		cout << '\t' << th_get_pathname(t);
+		cout << '\t' << archive_entry_pathname(entry);
 
 		// Special cases
-		if (TH_ISSYM(t)) {
+		if (S_ISLNK(status->st_mode)) {
 			// Symlink
-			cout << " -> " << th_get_linkname(t);
-		} else if (TH_ISCHR(t) || TH_ISBLK(t)) {
+			cout << " -> " << archive_entry_symlink(entry);
+		} else if (S_ISCHR(status->st_mode) ||
+		           S_ISBLK(status->st_mode)) {
 			// Device
-			cout << " (" << th_get_devmajor(t) << ", " << th_get_devminor(t) << ")";
-		} else if (TH_ISREG(t) && !th_get_size(t)) {
+			cout << " (" << archive_entry_rdevmajor(entry)
+			     << ", " << archive_entry_rdevminor(entry)
+			     << ")";
+		} else if (S_ISREG(status->st_mode) &&
+		           archive_entry_size(entry) == 0) {
 			// Empty regular file
 			cout << " (EMPTY)";
 		}
 
 		cout << '\n';
 		
-                if (TH_ISREG(t) && tar_skip_regfile(t))
+		if (S_ISREG(status->st_mode) &&
+		    archive_read_data_skip(archive))
                         throw runtime_error_with_errno("could not read " + filename);
         }
    
         if (i == 0) {
-                if (errno == 0)
+		if (archive_errno(archive) == 0)
                         throw runtime_error("empty package");
                 else
                         throw runtime_error("could not read " + filename);
         }
 
-        tar_close(t);
+	archive_read_finish(archive);
 }
 
 void pkgutil::print_version() const
