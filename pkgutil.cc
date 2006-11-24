@@ -353,14 +353,13 @@ pair<string, pkgutil::pkginfo_t> pkgutil::pkg_open(const string& filename) const
 
 	for (i = 0; archive_read_next_header(archive, &entry) ==
 	     ARCHIVE_OK; ++i) {
-		const struct stat* status;
 
 		result.second.files.insert(result.second.files.end(),
 		                           archive_entry_pathname(entry));
 
-		status = archive_entry_stat(entry);
+		mode_t mode = archive_entry_mode(entry);
 
-		if (S_ISREG(status->st_mode) &&
+		if (S_ISREG(mode) &&
 		    archive_read_data_skip(archive) != ARCHIVE_OK)
 			throw runtime_error_with_errno("could not read " + filename, archive_errno(archive));
 	}
@@ -403,13 +402,13 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 
 		// Check if file is filtered out via INSTALL
 		if (non_install_list.find(archive_filename) != non_install_list.end()) {
-			const struct stat* status;
+			mode_t mode;
 
 			cout << utilname << ": ignoring " << archive_filename << endl;
 
-			status = archive_entry_stat(entry);
+			mode = archive_entry_mode(entry);
 
-			if (S_ISREG(status->st_mode))
+			if (S_ISREG(mode))
 				archive_read_data_skip(archive);
 
 			continue;
@@ -435,12 +434,10 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 		// Check rejected file
 		if (real_filename != original_filename) {
 			bool remove_file = false;
-			const struct stat* status;
-
-			status = archive_entry_stat(entry);
+			mode_t mode = archive_entry_mode(entry);
 
 			// Directory
-			if (S_ISDIR(status->st_mode))
+			if (S_ISDIR(mode))
 				remove_file = permissions_equal(real_filename, original_filename);
 			// Other files
 			else
@@ -503,17 +500,15 @@ void pkgutil::pkg_footprint(string& filename) const
 
 	for (i = 0; archive_read_next_header(archive, &entry) ==
 	     ARCHIVE_OK; ++i) {
-		const struct stat* status;
-
-		status = archive_entry_stat(entry);
+		mode_t mode = archive_entry_mode(entry);
 
 		// Access permissions
-		if (S_ISLNK(status->st_mode)) {
+		if (S_ISLNK(mode)) {
 			// Access permissions on symlinks differ among filesystems, e.g. XFS and ext2 have different.
 			// To avoid getting different footprints we always use "lrwxrwxrwx".
 			cout << "lrwxrwxrwx";
 		} else {
-			cout << mtos(archive_entry_mode(entry));
+			cout << mtos(mode);
 		}
 
 		cout << '\t';
@@ -540,16 +535,16 @@ void pkgutil::pkg_footprint(string& filename) const
 		cout << '\t' << archive_entry_pathname(entry);
 
 		// Special cases
-		if (S_ISLNK(status->st_mode)) {
+		if (S_ISLNK(mode)) {
 			// Symlink
 			cout << " -> " << archive_entry_symlink(entry);
-		} else if (S_ISCHR(status->st_mode) ||
-		           S_ISBLK(status->st_mode)) {
+		} else if (S_ISCHR(mode) ||
+		           S_ISBLK(mode)) {
 			// Device
 			cout << " (" << archive_entry_rdevmajor(entry)
 			     << ", " << archive_entry_rdevminor(entry)
 			     << ")";
-		} else if (S_ISREG(status->st_mode) &&
+		} else if (S_ISREG(mode) &&
 		           archive_entry_size(entry) == 0) {
 			// Empty regular file
 			cout << " (EMPTY)";
@@ -557,7 +552,7 @@ void pkgutil::pkg_footprint(string& filename) const
 
 		cout << '\n';
 		
-		if (S_ISREG(status->st_mode) && archive_read_data_skip(archive))
+		if (S_ISREG(mode) && archive_read_data_skip(archive))
 			throw runtime_error_with_errno("could not read " + filename, archive_errno(archive));
 	}
    
