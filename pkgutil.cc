@@ -489,6 +489,42 @@ void pkgutil::pkg_footprint(string& filename) const
 	struct archive* archive;
 	struct archive_entry* entry;
 
+	map<string, mode_t> hardlink_target_modes;
+
+	// We first do a run over the archive and remember the modes
+	// of regular files.
+	// In the second run, we print the footprint - using the stored
+	// modes for hardlinks.
+	//
+	// FIXME the code duplication here is butt ugly
+	archive = archive_read_new();
+	archive_read_support_compression_all(archive);
+	archive_read_support_format_all(archive);
+
+	if (archive_read_open_filename(archive,
+	    const_cast<char*>(filename.c_str()),
+	    ARCHIVE_DEFAULT_BYTES_PER_BLOCK) != ARCHIVE_OK)
+                throw runtime_error_with_errno("could not open " + filename, archive_errno(archive));
+
+	for (i = 0; archive_read_next_header(archive, &entry) ==
+	     ARCHIVE_OK; ++i) {
+
+		mode_t mode = archive_entry_mode(entry);
+
+		if (!archive_entry_hardlink(entry)) {
+			const char *s = archive_entry_pathname(entry);
+
+			hardlink_target_modes[s] = mode;
+		}
+
+		if (S_ISREG(mode) && archive_read_data_skip(archive))
+			throw runtime_error_with_errno("could not read " + filename, archive_errno(archive));
+	}
+
+	archive_read_finish(archive);
+
+	// Too bad, there doesn't seem to be a way to reuse our archive
+	// instance
 	archive = archive_read_new();
 	archive_read_support_compression_all(archive);
 	archive_read_support_format_all(archive);
@@ -508,7 +544,12 @@ void pkgutil::pkg_footprint(string& filename) const
 			// To avoid getting different footprints we always use "lrwxrwxrwx".
 			cout << "lrwxrwxrwx";
 		} else {
-			cout << mtos(mode);
+			const char *h = archive_entry_hardlink(entry);
+
+			if (h)
+				cout << mtos(hardlink_target_modes[h]);
+			else
+				cout << mtos(mode);
 		}
 
 		cout << '\t';
