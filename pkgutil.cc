@@ -422,7 +422,7 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 		                           (real_filename.c_str()));
 
 		// Extract file
-		if (archive_read_extract(archive, entry, 0) !=
+		if (archive_read_extract(archive, entry, ARCHIVE_EXTRACT_OWNER && ARCHIVE_EXTRACT_PERM) !=
 		    ARCHIVE_OK) {
 			// If a file fails to install we just print an error message and
 			// continue trying to install the rest of the package.
