@@ -99,7 +99,6 @@ public:
 void assert_argument(char** argv, int argc, int index);
 string itos(unsigned int value);
 string mtos(mode_t mode);
-int unistd_gzopen(char* pathname, int flags, mode_t mode);
 string trim_filename(const string& filename);
 bool file_exists(const string& filename);
 bool file_empty(const string& filename);

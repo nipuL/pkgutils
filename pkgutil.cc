@@ -38,7 +38,6 @@
 #include <sys/param.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <zlib.h>
 #include <libgen.h>
 #include <archive.h>
 #include <archive_entry.h>
@@ -697,42 +696,6 @@ string mtos(mode_t mode)
         }
 
 	return s;
-}
-
-int unistd_gzopen(char* pathname, int flags, mode_t mode)
-{
-	char* gz_mode;
-   
-	switch (flags & O_ACCMODE) {
-	case O_WRONLY:
-		gz_mode = "w";
-		break;
-
-	case O_RDONLY:
-		gz_mode = "r";
-		break;
-
-	case O_RDWR:
-	default:
-		errno = EINVAL;
-		return -1;
-	}
-
-	int fd;
-	gzFile gz_file;
-
-	if ((fd = open(pathname, flags, mode)) == -1)
-		return -1;
-   
-	if ((flags & O_CREAT) && fchmod(fd, mode))
-		return -1;
-   
-	if (!(gz_file = gzdopen(fd, gz_mode))) {
-		errno = ENOMEM;
-		return -1;
-	}
-   
-	return (int)gz_file;
 }
 
 string trim_filename(const string& filename)
