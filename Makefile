@@ -92,6 +92,7 @@ clean:
 	rm -f $(OBJECTS)
 	rm -f $(MANPAGES)
 	rm -f $(MANPAGES:=.txt)
+	rm -rf pkgmk pkgadd rejmerge *.8
 
 distclean: clean
 	rm -f pkgadd pkginfo pkgrm pkgmk rejmerge

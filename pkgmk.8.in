@@ -19,6 +19,9 @@ Global build configuration is stored in \fI/etc/pkgmk.conf\fP. This
 file is read by pkgmk at startup.
 .SH OPTIONS
 .TP
+.B "\-a, \-\-arch"
+Build a package for an alternative architecture.
+.TP
 .B "\-i, \-\-install"
 Install package using pkgadd(8) after successful build.
 .TP

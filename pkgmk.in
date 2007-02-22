@@ -446,7 +446,7 @@ build_needed() {
 	RESULT="yes"
 	if [ -f $TARGET ]; then
 		RESULT="no"
-		for FILE in $PKGMK_PKGFILE ${source[@]}; do
+		for FILE in $PKGMK_ARCH_PKGFILE $PKGMK_PKGFILE ${source[@]}; do
 			FILE=`get_filename $FILE`
 			if [ ! -e $FILE ] || [ ! $TARGET -nt $FILE ]; then
 				RESULT="yes"
@@ -472,6 +472,7 @@ interrupted() {
 print_help() {
 	echo "usage: `basename $PKGMK_COMMAND` [options]"
 	echo "options:"
+	echo "  -a,   --arch                build for alternative architecture"
 	echo "  -i,   --install             build and install package"
 	echo "  -u,   --upgrade             build and install package (as upgrade)"
 	echo "  -r,   --recursive           search for and build packages recursively"
@@ -495,6 +496,13 @@ print_help() {
 parse_options() {
 	while [ "$1" ]; do
 		case $1 in
+			-a|--arch)
+				if [ ! "$2" ]; then
+					echo "`basename $PKGMK_COMMAND`: option $1 requires and argument"
+					exit 1
+				fi
+				PKGMK_ARCH="$2"
+				shift;;
 			-i|--install)
 				PKGMK_INSTALL="install" ;;
 			-u|--upgrade)
@@ -547,6 +555,29 @@ parse_options() {
 	done
 }
 
+check_arch() {
+	info "PKGMK_ARCH: $PKGMK_ARCH"
+	if [ ! -d $PKGMK_ARCH ]; then
+		return 1
+	fi
+	PKGMK_ARCH_PKGFILE="$PKGMK_ARCH/$PKGMK_PKGFILE"
+	PKGMK_ARCH_MD5SUM="$PKGMK_ARCH/$PKGMK_MD5SUM"
+	PKGMK_ARCH_FOOTPRINT="$PKGMK_ARCH/$PKGMK_FOOTPRINT"
+	PKGMK_ARCH_NOSTRIP="$PKGMK_ARCH/$PKGMK_NOSTRIP"
+	if [ -f $PKGMK_ARCH_PKGFILE ]; then
+		. $PKGMK_ARCH_PKGFILE
+	fi
+	if [ -f $PKGMK_ARCH_MD5SUM ]; then
+		PKGMK_MD5SUM=$PKGMK_ARCH_MD5SUM
+	fi
+	if [ -f $PKGMK_ARCH_FOOTPRINT ]; then
+		PKGMK_FOOTPRINT=$PKGMK_ARCH_FOOTPRINT
+	fi
+	if [ -f $PKGMK_ARCH_NOSTRIP ]; then
+		PKGMK_NOSTRIP=$PKGMK_ARCH_NOSTRIP
+	fi
+}
+
 main() {
 	local FILE TARGET
 	
@@ -564,6 +595,8 @@ main() {
 		fi
 		. $FILE
 	done
+
+	check_arch
 	
 	check_directory "$PKGMK_SOURCE_DIR"
 	check_directory "$PKGMK_PACKAGE_DIR"
@@ -571,7 +604,11 @@ main() {
 	
 	check_pkgfile
 	
-	TARGET="$PKGMK_PACKAGE_DIR/$name#$version-$release.pkg.tar.gz"
+	if [ "$PKGMK_ARCH" != "$HOSTTYPE" ]; then
+		TARGET="$PKGMK_PACKAGE_DIR/$name-$PKGMK_ARCH#$version-$release.pkg.tar.gz"
+	else
+		TARGET="$PKGMK_PACKAGE_DIR/$name#$version-$release.pkg.tar.gz"
+	fi
 	
 	if [ "$PKGMK_CLEAN" = "yes" ]; then
 		clean
@@ -650,6 +687,12 @@ PKGMK_IGNORE_MD5SUM="no"
 PKGMK_CHECK_MD5SUM="no"
 PKGMK_NO_STRIP="no"
 PKGMK_CLEAN="no"
+
+PKGMK_ARCH="$HOSTTYPE"
+PKGMK_ARCH_PKGFILE="$PKGMK_PKGFILE"
+PKGMK_ARCH_MD5SUM="$PKGMK_MD5SUM"
+PKGMK_ARCH_FOOTPRINT="$PKGMK_FOOTPRINT"
+PKGMK_ARCH_NOSTRIP="$PKGMK_NOSTRIP"
 
 main "$@"
 
