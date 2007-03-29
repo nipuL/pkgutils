@@ -557,6 +557,10 @@ parse_options() {
 }
 
 check_arch() {
+	ARCH_DIR=`echo $PKGMK_ROOT | awk -F@ '{printf $2}'`
+	if [ $ARCH_DIR ]; then
+		PKGMK_ARCH=$ARCH_DIR
+	fi
 	info "PKGMK_ARCH: $PKGMK_ARCH"
 	if [ ! -d $PKGMK_ARCH ]; then
 		return 1
@@ -692,7 +696,7 @@ PKGMK_CHECK_MD5SUM="no"
 PKGMK_NO_STRIP="no"
 PKGMK_CLEAN="no"
 
-PKGMK_ARCH="$HOSTTYPE"
+PKGMK_ARCH="`uname -m`"
 PKGMK_ARCH_PKGFILE="$PKGMK_PKGFILE"
 PKGMK_ARCH_MD5SUM="$PKGMK_MD5SUM"
 PKGMK_ARCH_FOOTPRINT="$PKGMK_FOOTPRINT"
