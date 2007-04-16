@@ -612,7 +612,7 @@ main() {
 	if [ "$arch_release" ]; then
 		release="$release,$arch_release"
 	fi
-	if [ "$PKGMK_ARCH" != "$HOSTTYPE" ]; then
+	if [ "$PKGMK_ARCH" != "$PKGMK_NATIVE_ARCH" ]; then
 		TARGET="$PKGMK_PACKAGE_DIR/$name@$PKGMK_ARCH#$version-$release.pkg.tar.gz"
 	else
 		TARGET="$PKGMK_PACKAGE_DIR/$name#$version-$release.pkg.tar.gz"
@@ -696,7 +696,8 @@ PKGMK_CHECK_MD5SUM="no"
 PKGMK_NO_STRIP="no"
 PKGMK_CLEAN="no"
 
-PKGMK_ARCH="`uname -m`"
+PKGMK_NATIVE_ARCH="`uname -m`"
+PKGMK_ARCH=$PKGMK_NATIVE_ARCH
 PKGMK_ARCH_PKGFILE="$PKGMK_PKGFILE"
 PKGMK_ARCH_MD5SUM="$PKGMK_MD5SUM"
 PKGMK_ARCH_FOOTPRINT="$PKGMK_FOOTPRINT"
