@@ -58,5 +58,6 @@ Configuration file.
 .SH SEE ALSO
 pkgrm(8), pkginfo(8), pkgmk(8), rejmerge(8)
 .SH COPYRIGHT
-pkgadd (pkgutils) is Copyright (c) 2000-2005 Per Liden and is licensed through
-the GNU General Public License. Read the COPYING file for the complete license.
+pkgadd (pkgutils) is Copyright (c) 2000-2005 Per Liden and Copyright (c) 2006-2007 CRUX team (http://crux.nu).
+pkgadd (pkgutils) is licensed through the GNU General Public License.
+Read the COPYING file for the complete license.

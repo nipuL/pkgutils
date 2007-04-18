@@ -21,5 +21,8 @@ $ make DESTDIR=/some/other/path install
 
 Copyright
 ---------
-pkgutils is Copyright (c) 2000-2005 Per Liden and is licensed through the
-GNU General Public License. Read the COPYING file for the complete license.
+pkgutils is Copyright (c) 2000-2005 Per Liden and
+Copyright (c) 2006-2007 CRUX team (http://crux.nu).
+
+pkgutils is licensed through the GNU General Public License.
+Read the COPYING file for the complete license.
