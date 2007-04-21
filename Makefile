@@ -26,6 +26,7 @@ MANDIR = /usr/man
 ETCDIR = /etc
 
 VERSION = 5.30.0
+NAME = pkgutils-$(VERSION)
 
 CXXFLAGS += -DNDEBUG
 CXXFLAGS += -O2 -Wall -pedantic -D_GNU_SOURCE -DVERSION=\"$(VERSION)\" \
@@ -66,12 +67,11 @@ endif
 .PHONY:	install clean distclean dist
 
 dist: distclean
-	rm -rf /tmp/pkgutils-$(VERSION)
-	mkdir -p /tmp/pkgutils-$(VERSION)
-	git-log > ChangeLog
-	cp -rf . /tmp/pkgutils-$(VERSION)
-	tar -C /tmp --exclude .git -czvf ../pkgutils-$(VERSION).tar.gz pkgutils-$(VERSION)
-	rm -rf /tmp/pkgutils-$(VERSION)
+	rm -rf $(NAME) $(NAME).tar.gz
+	git archive --format=tar --prefix=$(NAME)/ HEAD | tar -x
+	git log > $(NAME)/ChangeLog
+	tar czvf $(NAME).tar.gz $(NAME)
+	rm -rf $(NAME)
 
 install: all
 	install -D -m0755 pkgadd $(DESTDIR)$(BINDIR)/pkgadd
