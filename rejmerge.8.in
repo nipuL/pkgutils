@@ -73,5 +73,6 @@ Directory where rejected files are stored.
 .SH SEE ALSO
 pkgadd(8), pkgrm(8), pkginfo(8), pkgmk(8)
 .SH COPYRIGHT
-rejmerge (pkgutils) is Copyright (c) 2000-2005 Per Liden and is licensed through
-the GNU General Public License. Read the COPYING file for the complete license.
+rejmerge (pkgutils) is Copyright (c) 2000-2005 Per Liden and Copyright (c) 2006-2007 CRUX team (http://crux.nu).
+rejmerge (pkgutils) is licensed through the GNU General Public License.
+Read the COPYING file for the complete license.

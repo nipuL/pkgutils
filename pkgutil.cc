@@ -2,6 +2,7 @@
 //  pkgutils
 // 
 //  Copyright (c) 2000-2005 Per Liden
+//  Copyright (c) 2006-2007 by CRUX team (http://crux.nu)
 // 
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -41,6 +42,10 @@
 #include <libgen.h>
 #include <archive.h>
 #include <archive_entry.h>
+
+#define INIT_ARCHIVE(ar) \
+	archive_read_support_compression_all((ar)); \
+	archive_read_support_format_all((ar))
 
 using __gnu_cxx::stdio_filebuf;
 
@@ -342,8 +347,7 @@ pair<string, pkgutil::pkginfo_t> pkgutil::pkg_open(const string& filename) const
 	result.second.version = version;
 
 	archive = archive_read_new();
-	archive_read_support_compression_all(archive);
-	archive_read_support_format_all(archive);
+	INIT_ARCHIVE(archive);
 
 	if (archive_read_open_filename(archive,
 	    const_cast<char*>(filename.c_str()),
@@ -382,8 +386,7 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 	unsigned int i;
 
 	archive = archive_read_new();
-	archive_read_support_compression_all(archive);
-	archive_read_support_format_all(archive);
+	INIT_ARCHIVE(archive);
 
 	if (archive_read_open_filename(archive,
 	    const_cast<char*>(filename.c_str()),
@@ -498,8 +501,7 @@ void pkgutil::pkg_footprint(string& filename) const
 	//
 	// FIXME the code duplication here is butt ugly
 	archive = archive_read_new();
-	archive_read_support_compression_all(archive);
-	archive_read_support_format_all(archive);
+	INIT_ARCHIVE(archive);
 
 	if (archive_read_open_filename(archive,
 	    const_cast<char*>(filename.c_str()),
@@ -526,8 +528,7 @@ void pkgutil::pkg_footprint(string& filename) const
 	// Too bad, there doesn't seem to be a way to reuse our archive
 	// instance
 	archive = archive_read_new();
-	archive_read_support_compression_all(archive);
-	archive_read_support_format_all(archive);
+	INIT_ARCHIVE(archive);
 
 	if (archive_read_open_filename(archive,
 	    const_cast<char*>(filename.c_str()),
