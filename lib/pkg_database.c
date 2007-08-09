@@ -211,7 +211,7 @@ pkg_database_read_package_list (PkgDatabase *db,
 				if (*buf && mode == PKG_DATABASE_READ_ALL) {
 					PkgPackageEntry *entry;
 
-					entry = pkg_package_entry_new (buf);
+					entry = pkg_package_entry_new (buf, buf_len);
 					pkg->entries = list_prepend (pkg->entries, entry);
 				} else if (!*buf) {
 					state = STATE_NAME;
@@ -285,7 +285,7 @@ pkg_database_fill_package_files (PkgDatabase *db, PkgPackage *pkg)
 		if (!*buf)
 			break;
 
-		entry = pkg_package_entry_new (buf);
+		entry = pkg_package_entry_new (buf, buf_len);
 		pkg->entries = list_prepend (pkg->entries, entry);
 	}
 

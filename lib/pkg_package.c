@@ -175,7 +175,7 @@ pkg_package_new_from_file (const char *file)
 		const char *s;
 
 		s = archive_entry_pathname (entry);
-		pkg_entry = pkg_package_entry_new (s);
+		pkg_entry = pkg_package_entry_new (s, (size_t) -1);
 
 		pkg_entry->mode = archive_entry_mode (entry);
 		pkg_entry->uid = archive_entry_uid (entry);

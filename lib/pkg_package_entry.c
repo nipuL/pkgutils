@@ -26,21 +26,21 @@
 #include "pkg_package_entry.h"
 
 PkgPackageEntry *
-pkg_package_entry_new (const char *name)
+pkg_package_entry_new (const char *name, size_t name_len)
 {
 	PkgPackageEntry *entry;
-	size_t len;
 
-	len = strlen (name);
+	if (name_len == (size_t) -1)
+		name_len = strlen (name);
 
-	entry = malloc (sizeof (PkgPackageEntry) + len + 2);
+	entry = malloc (sizeof (PkgPackageEntry) + name_len + 2);
 	if (!entry)
 		return NULL;
 
 	entry->name[0] = '/';
-	memcpy (&entry->name[1], name, len + 1);
+	memcpy (&entry->name[1], name, name_len + 1);
 
-	entry->name_len = len + 1;
+	entry->name_len = name_len + 1;
 	entry->refcount = 1;
 
 	return entry;

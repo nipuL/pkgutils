@@ -34,7 +34,7 @@ typedef struct {
 	char name[];
 } PkgPackageEntry;
 
-PkgPackageEntry *pkg_package_entry_new (const char *name);
+PkgPackageEntry *pkg_package_entry_new (const char *name, size_t name_len);
 
 void pkg_package_entry_ref (PkgPackageEntry *entry);
 void pkg_package_entry_unref (PkgPackageEntry *entry);
