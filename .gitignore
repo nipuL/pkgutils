@@ -1,7 +1,11 @@
 .depend
 *.o
+*.a
+*.so
 *.8
 pkgadd
+pkginfo
+pkgrm
 pkgmk
 rejmerge
 
