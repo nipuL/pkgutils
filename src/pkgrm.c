@@ -76,6 +76,7 @@ pkgrm (int argc, char **argv)
 		{ "root", required_argument, NULL, 'r' },
 		{ "version", no_argument, NULL, 'v' },
 		{ "help", no_argument, NULL, 'h' },
+		{ NULL, 0, NULL, 0 },
 	};
 
 	while (true) {
