@@ -249,11 +249,18 @@ PKG_API
 PkgPackage *
 pkg_database_find (PkgDatabase *db, const char *name)
 {
+	PkgPackage *pkg;
 	List *l;
 
 	l = list_find_custom (db->packages, find_package_cb, (void *) name);
+	if (!l)
+		return NULL;
 
-	return l ? l->data : NULL;
+	pkg = l->data;
+
+	pkg_package_ref (pkg);
+
+	return pkg;
 }
 
 PKG_API
