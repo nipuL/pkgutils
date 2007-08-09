@@ -153,7 +153,7 @@ pkg_database_unref (PkgDatabase *db)
 PKG_API
 void
 pkg_database_read_package_list (PkgDatabase *db,
-                                pkg_database_read_mode_t mode)
+                                PkgDatabaseReadMode mode)
 {
 	PkgPackage *pkg = NULL;
 	char buf[PATH_MAX];

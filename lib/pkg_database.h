@@ -49,7 +49,7 @@ typedef struct {
 typedef enum {
 	PKG_DATABASE_READ_ALL,
 	PKG_DATABASE_READ_NAMES_ONLY,
-} pkg_database_read_mode_t;
+} PkgDatabaseReadMode;
 
 typedef void (*PkgDatabaseForeachFunc) (PkgPackage *pkg, void *user_data);
 
@@ -64,7 +64,7 @@ void pkg_database_unref (PkgDatabase *db);
 
 PKG_API
 void pkg_database_read_package_list (PkgDatabase *db,
-                                     pkg_database_read_mode_t mode);
+                                     PkgDatabaseReadMode mode);
 
 PKG_API
 void pkg_database_foreach (PkgDatabase *db, PkgDatabaseForeachFunc func,
