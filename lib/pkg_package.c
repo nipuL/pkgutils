@@ -246,9 +246,9 @@ pkg_package_includes (PkgPackage *pkg,
 {
 	for (List *l = pkg->entries; l; l = l->next) {
 		PkgPackageEntry *entry = l->data;
-		size_t n = MIN (name_len, entry->name_len) + 1;
 
-		if (!memcmp (entry->name, name, n))
+		if (entry->name_len == name_len &&
+		    !memcmp (entry->name, name, name_len))
 			return true;
 	}
 
