@@ -292,6 +292,11 @@ list_footprint (const char *file)
 	PkgPackage *pkg;
 
 	pkg = pkg_package_new_from_file (file);
+	if (!pkg) {
+		fprintf (stderr, "cannot open package '%s'\n", file);
+		return 1;
+	}
+
 	pkg_package_foreach (pkg, (PkgPackageForeachFunc) list_footprint_cb,
 	                     NULL);
 	pkg_package_unref (pkg);
