@@ -140,21 +140,12 @@ parse_filename (PkgPackage *pkg, const char *path)
 	return true;
 }
 
-PKG_API
-PkgPackage *
-pkg_package_new_from_file (const char *file)
+static bool
+read_archive (PkgPackage *pkg, const char *file)
 {
-	PkgPackage *pkg;
 	struct archive *archive;
 	struct archive_entry *entry;
 	int s;
-
-	pkg = malloc (sizeof (PkgPackage));
-	if (!pkg)
-		return NULL;
-
-	if (!parse_filename (pkg, file))
-		return NULL;
 
 	archive = archive_read_new ();
 	INIT_ARCHIVE (archive);
@@ -163,9 +154,7 @@ pkg_package_new_from_file (const char *file)
 	                                ARCHIVE_DEFAULT_BYTES_PER_BLOCK);
 	if (s != ARCHIVE_OK) {
 		archive_read_finish (archive);
-		free (pkg);
-
-		return NULL;
+		return false;
 	}
 
 	pkg->entries = NULL;
@@ -188,6 +177,27 @@ pkg_package_new_from_file (const char *file)
 	archive_read_finish (archive);
 
 	pkg->entries = list_reverse (pkg->entries);
+
+	return true;
+}
+
+PKG_API
+PkgPackage *
+pkg_package_new_from_file (const char *file)
+{
+	PkgPackage *pkg;
+
+	pkg = malloc (sizeof (PkgPackage));
+	if (!pkg)
+		return NULL;
+
+	if (!parse_filename (pkg, file))
+		return NULL;
+
+	if (!read_archive (pkg, file)) {
+		free (pkg);
+		return NULL;
+	}
 
 	pkg->refcount = 1;
 
