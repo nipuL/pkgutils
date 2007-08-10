@@ -33,11 +33,11 @@
 typedef struct {
 	int refcount;
 
-	char name[PKG_PACKAGE_MAX_NAME_LEN + 1];
+	List *entries;
+
 	char version[PKG_PACKAGE_MAX_VERSION_LEN + 1];
 	char release[PKG_PACKAGE_MAX_RELEASE_LEN + 1];
-
-	List *entries;
+	char name[];
 } PkgPackage;
 
 typedef void (*PkgPackageForeachFunc) (PkgPackage *pkg,

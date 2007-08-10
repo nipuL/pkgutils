@@ -53,7 +53,7 @@ pkg_package_new (const char *name, const char *version, const char *release)
 	if (release_len > PKG_PACKAGE_MAX_RELEASE_LEN)
 		return NULL;
 
-	pkg = malloc (sizeof (PkgPackage));
+	pkg = malloc (sizeof (PkgPackage) + name_len + 1);
 	if (!pkg)
 		return NULL;
 
@@ -75,69 +75,61 @@ pkg_package_new (const char *name, const char *version, const char *release)
 	return pkg;
 }
 
-static bool
-parse_filename (PkgPackage *pkg, const char *path)
+static PkgPackage *
+create_from_filename (const char *path)
 {
+	PkgPackage *pkg;
 	char buf[PATH_MAX], *hash, *dash, *suffix;
 	const char *file;
-	size_t file_len, len;
+	size_t len, name_len, version_len, release_len;
 
-	file = strrchr (path, '/');
+	file = basename (path);
+	len = strlen (file);
 
-	if (!file) {
-		file = path;
-		file_len = strlen (file);
-	} else {
-		file_len = strlen (file);
-		if (file_len < 6)
-			return false;
+	if (len < strlen (".pkg.tar.") || len >= sizeof (buf))
+		return NULL;
 
-		file++;
-		file_len--;
-	}
-
-	if (file_len > sizeof (buf) - 1)
-		return false;
-
-	memcpy (buf, file, file_len + 1);
+	memcpy (buf, file, len + 1);
 
 	hash = strchr (buf, '#');
 	if (!hash)
-		return false;
+		return NULL;
 
 	*hash++ = 0;
 
-	len = hash - buf;
-	if (len > PKG_PACKAGE_MAX_NAME_LEN - 1)
-		return false;
-
-	memcpy (pkg->name, buf, len);
+	name_len = hash - buf;
+	if (name_len >= PKG_PACKAGE_MAX_NAME_LEN)
+		return NULL;
 
 	dash = strchr (hash, '-');
 	if (!dash)
-		return false;
+		return NULL;
 
 	*dash++ = 0;
 
-	len = dash - hash;
-	if (len > PKG_PACKAGE_MAX_VERSION_LEN - 1)
-		return false;
-
-	memcpy (pkg->version, hash, len);
+	version_len = dash - hash;
+	if (version_len >= PKG_PACKAGE_MAX_VERSION_LEN)
+		return NULL;
 
 	suffix = strstr (dash, ".pkg.tar.");
 	if (!suffix)
-		return false;
+		return NULL;
 
 	*suffix++ = 0;
 
-	len = suffix - dash;
-	if (len > PKG_PACKAGE_MAX_RELEASE_LEN - 1)
-		return false;
+	release_len = suffix - dash;
+	if (release_len >= PKG_PACKAGE_MAX_RELEASE_LEN)
+		return NULL;
 
-	memcpy (pkg->release, dash, len);
+	pkg = malloc (sizeof (PkgPackage) + name_len);
+	if (!pkg)
+		return NULL;
 
-	return true;
+	memcpy (pkg->name, buf, name_len);
+	memcpy (pkg->version, hash, version_len);
+	memcpy (pkg->release, dash, release_len);
+
+	return pkg;
 }
 
 static bool
@@ -187,11 +179,8 @@ pkg_package_new_from_file (const char *file)
 {
 	PkgPackage *pkg;
 
-	pkg = malloc (sizeof (PkgPackage));
+	pkg = create_from_filename (file);
 	if (!pkg)
-		return NULL;
-
-	if (!parse_filename (pkg, file))
 		return NULL;
 
 	if (!read_archive (pkg, file)) {
