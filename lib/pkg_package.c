@@ -1,5 +1,5 @@
 /*
- * pkgutil_ps
+ * pkgutils
  *
  * Copyright (c) 2000-2005 Per Liden
  * Copyright (c) 2007 by CRUX team (http://crux.nu)
