@@ -129,7 +129,7 @@ parse_filename (PkgPackage *pkg, const char *path)
 	if (!suffix)
 		return false;
 
-	*suffix = 0;
+	*suffix++ = 0;
 
 	len = suffix - dash;
 	if (len > PKG_PACKAGE_MAX_RELEASE_LEN - 1)
