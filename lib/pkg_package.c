@@ -98,7 +98,7 @@ create_from_filename (const char *path)
 	*hash++ = 0;
 
 	name_len = hash - buf;
-	if (name_len >= PKG_PACKAGE_MAX_NAME_LEN)
+	if (name_len > PKG_PACKAGE_MAX_NAME_LEN + 1)
 		return NULL;
 
 	dash = strchr (hash, '-');
@@ -108,7 +108,7 @@ create_from_filename (const char *path)
 	*dash++ = 0;
 
 	version_len = dash - hash;
-	if (version_len >= PKG_PACKAGE_MAX_VERSION_LEN)
+	if (version_len > PKG_PACKAGE_MAX_VERSION_LEN + 1)
 		return NULL;
 
 	suffix = strstr (dash, ".pkg.tar.");
@@ -118,7 +118,7 @@ create_from_filename (const char *path)
 	*suffix++ = 0;
 
 	release_len = suffix - dash;
-	if (release_len >= PKG_PACKAGE_MAX_RELEASE_LEN)
+	if (release_len > PKG_PACKAGE_MAX_RELEASE_LEN + 1)
 		return NULL;
 
 	pkg = malloc (sizeof (PkgPackage) + name_len);
