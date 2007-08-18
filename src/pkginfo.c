@@ -36,6 +36,7 @@
 typedef struct {
 	regex_t regex;
 	int matches;
+	PkgPackage *pkg;
 } ListOwnerData;
 
 static void
@@ -76,8 +77,7 @@ list_installed ()
 }
 
 static void
-list_files_cb (PkgPackage *pkg, PkgPackageEntry *entry,
-               const void *user_data)
+list_files_cb (PkgPackageEntry *entry, void *user_data)
 {
 	printf ("%s\n", entry->name);
 }
@@ -102,7 +102,7 @@ list_files (const char *package)
 
 	pkg_database_fill_package_files (db, pkg);
 
-	pkg_package_foreach (pkg, (PkgPackageForeachFunc) list_files_cb, NULL);
+	pkg_package_foreach (pkg, list_files_cb, NULL);
 
 	pkg_package_unref (pkg);
 	pkg_database_unref (db);
@@ -111,20 +111,22 @@ list_files (const char *package)
 }
 
 static void
-list_owners_cb2 (PkgPackage *pkg, PkgPackageEntry *entry,
-                 ListOwnerData *data)
+list_owners_cb2 (PkgPackageEntry *entry, void *user_data)
 {
+	ListOwnerData *data = user_data;
+
 	if (!regexec (&data->regex, entry->name, 0, 0, 0)) {
 		data->matches++;
-		printf ("%s %s\n", pkg->name, entry->name);
+		printf ("%s %s\n", data->pkg->name, entry->name);
 	}
 }
 
 static void
 list_owners_cb (PkgPackage *pkg, ListOwnerData *data)
 {
-	pkg_package_foreach (pkg, (PkgPackageForeachFunc) list_owners_cb2,
-	                     data);
+	data->pkg = pkg;
+
+	pkg_package_foreach (pkg, list_owners_cb2, data);
 }
 
 static int
@@ -247,8 +249,7 @@ print_mode (mode_t mode, char *ptr)
 #endif
 
 static void
-list_footprint_cb (PkgPackage *pkg, PkgPackageEntry *entry,
-                   const void *user_data)
+list_footprint_cb (PkgPackageEntry *entry, void *user_data)
 {
 #if 0
 	struct passwd *pw;
@@ -297,8 +298,7 @@ list_footprint (const char *file)
 		return 1;
 	}
 
-	pkg_package_foreach (pkg, (PkgPackageForeachFunc) list_footprint_cb,
-	                     NULL);
+	pkg_package_foreach (pkg, list_footprint_cb, NULL);
 	pkg_package_unref (pkg);
 
 	return 0;

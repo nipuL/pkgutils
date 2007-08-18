@@ -221,7 +221,7 @@ pkg_package_foreach (PkgPackage *pkg, PkgPackageForeachFunc func,
                      void *user_data)
 {
 	for (List *l = pkg->entries; l; l = l->next)
-		func (pkg, l->data, user_data);
+		func (l->data, user_data);
 }
 
 PKG_API
@@ -236,7 +236,7 @@ pkg_package_foreach_reverse (PkgPackage *pkg,
 		;
 
 	for (; l; l = l->prev)
-		func (pkg, l->data, user_data);
+		func (l->data, user_data);
 }
 
 bool

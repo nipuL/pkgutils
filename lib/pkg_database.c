@@ -309,8 +309,7 @@ entry_is_referenced_cb (void *data, void *user_data)
 }
 
 static void
-remove_file_cb (PkgPackage *pkg, PkgPackageEntry *entry,
-                void *user_data)
+remove_file_cb (PkgPackageEntry *entry, void *user_data)
 {
 	PkgDatabase *db = user_data;
 	char path[PATH_MAX];
@@ -333,8 +332,7 @@ remove_file_cb (PkgPackage *pkg, PkgPackageEntry *entry,
 }
 
 static void
-write_package_cb2 (PkgPackage *pkg, PkgPackageEntry *entry,
-                   void *user_data)
+write_package_cb2 (PkgPackageEntry *entry, void *user_data)
 {
 	FILE *fp = user_data;
 
