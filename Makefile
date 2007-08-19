@@ -28,8 +28,12 @@ CPPFLAGS += \
 	-DPKG_API="__attribute__ ((visibility(\"default\")))"
 
 LIB_LDFLAGS := -larchive
-PROGRAM_LDFLAGS := -static -Llib -lpkgutils -larchive -lz -lbz2
-#PROGRAM_LDFLAGS := -Llib -lpkgutils -larchive
+
+ifdef STATIC
+	PROGRAM_LDFLAGS := -static -Llib -lpkgutils -larchive -lz -lbz2
+else
+	PROGRAM_LDFLAGS := -Llib -lpkgutils -larchive
+endif
 
 ifndef VERBOSE
 	QUIET_CC = @echo '   ' CC $@;
