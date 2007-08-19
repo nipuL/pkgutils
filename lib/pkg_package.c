@@ -33,6 +33,15 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
+static int
+compare_entries (void *a, void *b)
+{
+	PkgPackageEntry *aa = a;
+	PkgPackageEntry *bb = b;
+
+	return strcmp (aa->name, bb->name);
+}
+
 PKG_API
 PkgPackage *
 pkg_package_new (const char *name, const char *version, const char *release)
@@ -70,7 +79,8 @@ pkg_package_new (const char *name, const char *version, const char *release)
 		pkg->release[0] = 0;
 
 	pkg->refcount = 1;
-	pkg->entries = NULL;
+	pkg->entries = bst_new (compare_entries,
+	                        (BstNodeFreeFunc) pkg_package_entry_unref);
 
 	return pkg;
 }
@@ -149,7 +159,8 @@ read_archive (PkgPackage *pkg, const char *file)
 		return false;
 	}
 
-	pkg->entries = NULL;
+	pkg->entries = bst_new (compare_entries,
+	                        (BstNodeFreeFunc) pkg_package_entry_unref);
 
 	while (archive_read_next_header (archive, &entry) == ARCHIVE_OK) {
 		PkgPackageEntry *pkg_entry;
@@ -163,12 +174,10 @@ read_archive (PkgPackage *pkg, const char *file)
 		pkg_entry->gid = archive_entry_gid (entry);
 		pkg_entry->size = archive_entry_size (entry);
 
-		pkg->entries = list_prepend (pkg->entries, pkg_entry);
+		pkg_package_add_entry (pkg, pkg_entry);
 	}
 
 	archive_read_finish (archive);
-
-	pkg->entries = list_reverse (pkg->entries);
 
 	return true;
 }
@@ -207,10 +216,7 @@ pkg_package_unref (PkgPackage *pkg)
 	if (--pkg->refcount)
 		return;
 
-	while (pkg->entries) {
-		pkg_package_entry_unref (pkg->entries->data);
-		pkg->entries = list_remove_link (pkg->entries, pkg->entries);
-	}
+	bst_free (pkg->entries);
 
 	free (pkg);
 }
@@ -220,8 +226,7 @@ void
 pkg_package_foreach (PkgPackage *pkg, PkgPackageForeachFunc func,
                      void *user_data)
 {
-	for (List *l = pkg->entries; l; l = l->next)
-		func (l->data, user_data);
+	bst_foreach (pkg->entries, (BstForeachFunc) func, user_data);
 }
 
 PKG_API
@@ -230,26 +235,17 @@ pkg_package_foreach_reverse (PkgPackage *pkg,
                              PkgPackageForeachFunc func,
                              void *user_data)
 {
-	List *l;
-
-	for (l = pkg->entries; l->next; l = l->next)
-		;
-
-	for (; l; l = l->prev)
-		func (l->data, user_data);
+	bst_foreach_reverse (pkg->entries, (BstForeachFunc) func, user_data);
 }
 
 bool
-pkg_package_includes (PkgPackage *pkg,
-                      const char *name, size_t name_len)
+pkg_package_includes (PkgPackage *pkg, PkgPackageEntry *entry)
 {
-	for (List *l = pkg->entries; l; l = l->next) {
-		PkgPackageEntry *entry = l->data;
+	return bst_includes (pkg->entries, entry);
+}
 
-		if (entry->name_len == name_len &&
-		    !memcmp (entry->name, name, name_len))
-			return true;
-	}
-
-	return false;
+void
+pkg_package_add_entry (PkgPackage *pkg, PkgPackageEntry *entry)
+{
+	bst_insert (pkg->entries, entry);
 }

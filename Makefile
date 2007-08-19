@@ -47,6 +47,7 @@ PROGRAM_OBJS := \
 	src/pkgrm.o \
 
 LIB_OBJS := \
+	lib/bst.o \
 	lib/list.o \
 	lib/pkg_package.o \
 	lib/pkg_package_entry.o \

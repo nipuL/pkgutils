@@ -212,13 +212,9 @@ pkg_database_read_package_list (PkgDatabase *db,
 					PkgPackageEntry *entry;
 
 					entry = pkg_package_entry_new (buf, buf_len);
-					pkg->entries = list_prepend (pkg->entries, entry);
-				} else if (!*buf) {
+					pkg_package_add_entry (pkg, entry);
+				} else if (!*buf)
 					state = STATE_NAME;
-
-					if (pkg)
-						pkg->entries = list_reverse (pkg->entries);
-				}
 
 				break;
 		}
@@ -293,10 +289,8 @@ pkg_database_fill_package_files (PkgDatabase *db, PkgPackage *pkg)
 			break;
 
 		entry = pkg_package_entry_new (buf, buf_len);
-		pkg->entries = list_prepend (pkg->entries, entry);
+		pkg_package_add_entry (pkg, entry);
 	}
-
-	pkg->entries = list_reverse (pkg->entries);
 }
 
 static int
@@ -305,7 +299,7 @@ entry_is_referenced_cb (void *data, void *user_data)
 	PkgPackage *pkg = data;
 	PkgPackageEntry *entry = user_data;
 
-	return !pkg_package_includes (pkg, entry->name, entry->name_len);
+	return !pkg_package_includes (pkg, entry);
 }
 
 static void
