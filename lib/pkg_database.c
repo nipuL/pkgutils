@@ -35,6 +35,15 @@
 #define PKG_DB_TMP PKG_DB ".incomplete_transaction"
 #define PKG_DB_BAK PKG_DB ".backup"
 
+typedef struct {
+	PkgDatabase *db;
+
+	char dir_prev[PATH_MAX];
+	size_t dir_prev_len;
+
+	bool included;
+} RemoveData;
+
 static int
 pkg_database_lock_init (PkgDatabaseLock *lock,
                         const char *root, size_t root_len,
@@ -303,14 +312,82 @@ entry_is_referenced_cb (void *data, void *user_data)
 }
 
 static void
+my_dirname (char *dir, size_t *dir_len)
+{
+	while ((*dir_len)--)
+		if (dir[*dir_len] == '/') {
+			dir[++(*dir_len)] = 0;
+			return;
+		}
+}
+
+/* checks whether the passed entry is referenced by another
+ * package in the database.
+ *
+ * the shortcut we're taking here is that if eg /usr/bin isn't
+ * referenced by any other package, then /usr/bin/foo cannot
+ * be referenced either and we don't need to call
+ * pkg_package_includes() on it.
+ */
+static bool
+entry_is_referenced (PkgPackageEntry *entry, RemoveData *data)
+{
+	/* first, check whether this entry is a child of the directory
+	 * that we examined earlier.
+	 */
+	if (data->dir_prev_len &&
+	    !strncmp (data->dir_prev, entry->name, data->dir_prev_len)) {
+
+		/* if the parent isn't included, the child cannot be included
+		 * either.
+		 */
+		if (!data->included)
+			return false;
+	} else {
+		char dir[PATH_MAX];
+		size_t dir_len;
+
+		/* get the directory part of the entry */
+		memcpy (dir, entry->name, entry->name_len + 1);
+		dir_len = entry->name_len;
+		my_dirname (dir, &dir_len);
+
+		memcpy (data->dir_prev, dir, dir_len + 1);
+		data->dir_prev_len = dir_len;
+
+		/* if the entry is not a directory, check whether the directory
+		 * is referenced by another package, and store that test result.
+		 */
+		if (entry->name[entry->name_len - 1] != '/') {
+			PkgPackageEntry *tmp;
+
+			tmp = pkg_package_entry_new (&dir[1], dir_len - 1);
+			data->included = list_find_custom (data->db->packages,
+			                                   entry_is_referenced_cb, tmp);
+			pkg_package_entry_unref (tmp);
+
+			if (!data->included)
+				return false;
+		}
+	}
+
+	/* as a last resort, we check whether the actual entry is
+	 * referenced by another package.
+	 */
+	return !!list_find_custom (data->db->packages,
+	                           entry_is_referenced_cb, entry);
+}
+
+static void
 remove_file_cb (PkgPackageEntry *entry, void *user_data)
 {
-	PkgDatabase *db = user_data;
+	RemoveData *data = user_data;
+	PkgDatabase *db = data->db;
 	char path[PATH_MAX];
 	struct stat st;
 	int s;
 
-	if (list_find_custom (db->packages, entry_is_referenced_cb, entry))
+	if (entry_is_referenced (entry, data))
 		return;
 
 	memcpy (mempcpy (path, db->root, db->root_len),
@@ -382,6 +459,7 @@ bool
 pkg_database_remove (PkgDatabase *db, const char *name)
 {
 	PkgPackage *pkg;
+	RemoveData remove_data;
 	List *link;
 
 	/* find the PkgPackage object for this package */
@@ -395,7 +473,11 @@ pkg_database_remove (PkgDatabase *db, const char *name)
 	db->packages = list_remove_link (db->packages, link);
 
 	/* remove the files/directories in this package */
-	pkg_package_foreach_reverse (pkg, remove_file_cb, db);
+	remove_data.db = db;
+	remove_data.dir_prev[0] = 0;
+	remove_data.dir_prev_len = 0;
+
+	pkg_package_foreach_reverse (pkg, remove_file_cb, &remove_data);
 	pkg_package_unref (pkg);
 
 	return database_commit (db);
