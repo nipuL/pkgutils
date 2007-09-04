@@ -50,12 +50,14 @@
 \
 		switch (new_root->balance) { \
 			case -1: \
-				new_root->left->balance = -1; \
+				new_root->left->balance = 1; \
 				break; \
 			case 1: \
-				new_root->right->balance = 1; \
+				new_root->right->balance = -1; \
 				break; \
 		} \
+\
+		new_root->balance = 0; \
 	} while (0)
 
 #define TRAVERSE(left, right) \
