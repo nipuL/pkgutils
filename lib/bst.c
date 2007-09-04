@@ -41,11 +41,9 @@
 #define ROT2(left, right) \
 	do { \
 		new_root = old_root->left->right; \
-		new_root->left = old_root->left; \
-\
 		old_root->left->right = new_root->left; \
+		new_root->left = old_root->left; \
 		old_root->left = new_root->right; \
-\
 		new_root->right = old_root; \
 \
 		new_root->left->balance = new_root->right->balance = 0; \
