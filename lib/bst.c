@@ -232,7 +232,7 @@ bst_insert (Bst *tree, void *data)
 	/* rebalance the tree */
 	if (!top_parent)
 		tree->root = tree_rebalance (top);
-	else if (c_top[0] < 0)
+	else if (top_parent->left == top)
 		top_parent->left = tree_rebalance (top);
 	else
 		top_parent->right = tree_rebalance (top);
