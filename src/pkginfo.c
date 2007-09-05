@@ -157,7 +157,6 @@ list_owners (const char *pattern)
 	return 0;
 }
 
-#if 0
 static void
 print_mode (mode_t mode, char *ptr)
 {
@@ -245,34 +244,32 @@ print_mode (mode_t mode, char *ptr)
 			*ptr++ = '-';
 			break;
 	}
+
+	*ptr = 0;
 }
-#endif
 
 static void
 list_footprint_cb (PkgPackageEntry *entry, void *user_data)
 {
-#if 0
 	struct passwd *pw;
 	struct group *gr;
-	char tmp[16], mode[16], user[32], group[32];
+	char mode[16], user[32], group[32];
 
 	print_mode (entry->mode, mode);
 
 	pw = getpwuid (entry->uid);
-	if (pw)
-		strlcpy (user, pw->pw_name, sizeof (user));
-	else {
-		sprintf (tmp, "%i", entry->uid);
-		strlcpy (user, tmp, sizeof (user));
-	}
+	if (pw) {
+		strncpy (user, pw->pw_name, sizeof (user));
+		user[sizeof (user) - 1] = 0;
+	} else
+		sprintf (user, "%i", entry->uid);
 
 	gr = getgrgid (entry->gid);
-	if (gr)
-		strlcpy (group, gr->gr_name, sizeof (group));
-	else {
-		sprintf (tmp, "%i", entry->gid);
-		strlcpy (group, tmp, sizeof (group));
-	}
+	if (gr) {
+		strncpy (group, gr->gr_name, sizeof (group));
+		group[sizeof (group) - 1] = 0;
+	} else
+		sprintf (group, "%i", entry->gid);
 
 	printf ("%s\t%s/%s\t%s", mode, user, group, entry->name);
 
@@ -284,7 +281,6 @@ list_footprint_cb (PkgPackageEntry *entry, void *user_data)
 		printf (" (EMPTY)\n");
 	else
 		printf ("\n");
-#endif
 }
 
 static int
