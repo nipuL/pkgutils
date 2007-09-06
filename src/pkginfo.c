@@ -271,7 +271,7 @@ list_footprint_cb (PkgPackageEntry *entry, void *user_data)
 	} else
 		sprintf (group, "%i", entry->gid);
 
-	printf ("%s\t%s/%s\t%s", mode, user, group, entry->name);
+	printf ("%s\t%s/%s\t%s", mode, user, group, &entry->name[1]);
 
 	if (S_ISLNK (entry->mode))
 		printf (" -> %s\n", "FIXME");//archive_entry_symlink
