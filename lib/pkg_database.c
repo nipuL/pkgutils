@@ -303,6 +303,15 @@ pkg_database_fill_package_files (PkgDatabase *db, PkgPackage *pkg)
 }
 
 static int
+path_is_referenced_cb (void *data, void *user_data)
+{
+	PkgPackage *pkg = data;
+	const char *path = user_data;
+
+	return !pkg_package_includes_path (pkg, path);
+}
+
+static int
 entry_is_referenced_cb (void *data, void *user_data)
 {
 	PkgPackage *pkg = data;
@@ -359,13 +368,8 @@ entry_is_referenced (PkgPackageEntry *entry, RemoveData *data)
 		 * is referenced by another package, and store that test result.
 		 */
 		if (entry->name[entry->name_len - 1] != '/') {
-			PkgPackageEntry *tmp;
-
-			tmp = pkg_package_entry_new (&dir[1], dir_len - 1);
 			data->included = list_find_custom (data->db->packages,
-			                                   entry_is_referenced_cb, tmp);
-			pkg_package_entry_unref (tmp);
-
+			                                   path_is_referenced_cb, dir);
 			if (!data->included)
 				return false;
 		}

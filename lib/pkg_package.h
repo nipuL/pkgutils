@@ -66,6 +66,7 @@ void pkg_package_foreach_reverse (PkgPackage *pkg,
                                   void *user_data);
 
 bool pkg_package_includes (PkgPackage *pkg, PkgPackageEntry *entry);
+bool pkg_package_includes_path (PkgPackage *pkg, const char *path);
 void pkg_package_add_entry (PkgPackage *pkg, PkgPackageEntry *entry);
 
 #endif

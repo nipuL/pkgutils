@@ -294,6 +294,13 @@ pkg_package_includes (PkgPackage *pkg, PkgPackageEntry *entry)
 	return !!bst_find (pkg->entries, compare_entries_cb, entry);
 }
 
+bool
+pkg_package_includes_path (PkgPackage *pkg, const char *path)
+{
+	return !!bst_find (pkg->entries, find_entry_by_name_cb,
+	                   (void *) path);
+}
+
 void
 pkg_package_add_entry (PkgPackage *pkg, PkgPackageEntry *entry)
 {
