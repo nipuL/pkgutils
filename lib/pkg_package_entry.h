@@ -24,11 +24,7 @@
 typedef struct {
 	int refcount;
 
-	mode_t mode;
-	uid_t uid;
-	gid_t gid;
-
-	int64_t size;
+	void *archive_entry;
 
 	size_t name_len;
 	char name[];
@@ -38,5 +34,23 @@ PkgPackageEntry *pkg_package_entry_new (const char *name, size_t name_len);
 
 void pkg_package_entry_ref (PkgPackageEntry *entry);
 void pkg_package_entry_unref (PkgPackageEntry *entry);
+
+PKG_API
+mode_t pkg_package_entry_get_mode (PkgPackageEntry *entry);
+
+PKG_API
+uid_t pkg_package_entry_get_uid (PkgPackageEntry *entry);
+
+PKG_API
+gid_t pkg_package_entry_get_gid (PkgPackageEntry *entry);
+
+PKG_API
+int64_t pkg_package_entry_get_size (PkgPackageEntry *entry);
+
+PKG_API
+dev_t pkg_package_entry_get_dev (PkgPackageEntry *entry);
+
+PKG_API
+const char *pkg_package_entry_get_symlink_target (PkgPackageEntry *entry);
 
 #endif

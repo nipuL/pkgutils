@@ -42,6 +42,7 @@ pkg_package_entry_new (const char *name, size_t name_len)
 
 	entry->name_len = name_len + 1;
 	entry->refcount = 1;
+	entry->archive_entry = NULL;
 
 	return entry;
 }
@@ -58,5 +59,50 @@ pkg_package_entry_unref (PkgPackageEntry *entry)
 	if (--entry->refcount)
 		return;
 
+	if (entry->archive_entry)
+		archive_entry_free (entry->archive_entry);
+
 	free (entry);
+}
+
+PKG_API
+mode_t
+pkg_package_entry_get_mode (PkgPackageEntry *entry)
+{
+	return archive_entry_mode (entry->archive_entry);
+}
+
+PKG_API
+uid_t
+pkg_package_entry_get_uid (PkgPackageEntry *entry)
+{
+	return archive_entry_uid (entry->archive_entry);
+}
+
+PKG_API
+gid_t
+pkg_package_entry_get_gid (PkgPackageEntry *entry)
+{
+	return archive_entry_gid (entry->archive_entry);
+}
+
+PKG_API
+int64_t
+pkg_package_entry_get_size (PkgPackageEntry *entry)
+{
+	return archive_entry_size (entry->archive_entry);
+}
+
+PKG_API
+dev_t
+pkg_package_entry_get_dev (PkgPackageEntry *entry)
+{
+	return archive_entry_rdev (entry->archive_entry);
+}
+
+PKG_API
+const char *
+pkg_package_entry_get_symlink_target (PkgPackageEntry *entry)
+{
+	return archive_entry_symlink (entry->archive_entry);
 }

@@ -26,11 +26,6 @@
 
 #include "pkg_package.h"
 
-/* FIXME */
-#define INIT_ARCHIVE(ar) \
-	archive_read_support_compression_all (ar); \
-	archive_read_support_format_all (ar);
-
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 static int
@@ -40,6 +35,14 @@ compare_entries (void *a, void *b)
 	PkgPackageEntry *bb = b;
 
 	return strcmp (aa->name, bb->name);
+}
+
+static int
+find_entry_by_name_cb (void *a, void *b)
+{
+	PkgPackageEntry *bb = b;
+
+	return strcmp (a, &bb->name[1]);
 }
 
 PKG_API
@@ -142,37 +145,85 @@ create_from_filename (const char *path)
 	return pkg;
 }
 
-static bool
-read_archive (PkgPackage *pkg, const char *file)
+static struct archive *
+open_archive (const char *file)
 {
 	struct archive *archive;
-	struct archive_entry *entry;
 	int s;
 
 	archive = archive_read_new ();
-	INIT_ARCHIVE (archive);
+
+	archive_read_support_compression_all (archive);
+	archive_read_support_format_all (archive);
 
 	s = archive_read_open_filename (archive, file,
 	                                ARCHIVE_DEFAULT_BYTES_PER_BLOCK);
 	if (s != ARCHIVE_OK) {
 		archive_read_finish (archive);
-		return false;
+		return NULL;
 	}
+
+	return archive;
+}
+
+static bool
+read_archive (PkgPackage *pkg, const char *file)
+{
+	struct archive *archive;
+	struct archive_entry *entry;
+	bool contains_hardlinks = false;
 
 	pkg->entries = bst_new (compare_entries,
 	                        (BstNodeFreeFunc) pkg_package_entry_unref);
+
+	archive = open_archive (file);
+	if (!archive)
+		return false;
 
 	while (archive_read_next_header (archive, &entry) == ARCHIVE_OK) {
 		PkgPackageEntry *pkg_entry;
 		const char *s;
 
+		if (archive_entry_hardlink (entry)) {
+			contains_hardlinks = true;
+			continue;
+		}
+
 		s = archive_entry_pathname (entry);
 		pkg_entry = pkg_package_entry_new (s, (size_t) -1);
+		pkg_entry->archive_entry = archive_entry_clone (entry);
 
-		pkg_entry->mode = archive_entry_mode (entry);
-		pkg_entry->uid = archive_entry_uid (entry);
-		pkg_entry->gid = archive_entry_gid (entry);
-		pkg_entry->size = archive_entry_size (entry);
+		pkg_package_add_entry (pkg, pkg_entry);
+	}
+
+	archive_read_finish (archive);
+
+	if (!contains_hardlinks)
+		return true;
+
+	archive = open_archive (file);
+	if (!archive)
+		return false;
+
+	while (archive_read_next_header (archive, &entry) == ARCHIVE_OK) {
+		PkgPackageEntry *pkg_entry, *pkg_entry2;
+		const char *s, *hardlink;
+
+		hardlink = archive_entry_hardlink (entry);
+		if (!hardlink)
+			continue;
+
+		s = archive_entry_pathname (entry);
+		pkg_entry = pkg_package_entry_new (s, (size_t) -1);
+		pkg_entry->archive_entry = archive_entry_clone (entry);
+
+		pkg_entry2 = bst_find (pkg->entries, find_entry_by_name_cb,
+		                       (void *) hardlink);
+
+		archive_entry_set_mode (pkg_entry->archive_entry,
+		                        pkg_package_entry_get_mode (pkg_entry2));
+		archive_entry_set_size (pkg_entry->archive_entry,
+		                        pkg_package_entry_get_size (pkg_entry2));
 
 		pkg_package_add_entry (pkg, pkg_entry);
 	}
@@ -193,6 +244,7 @@ pkg_package_new_from_file (const char *file)
 		return NULL;
 
 	if (!read_archive (pkg, file)) {
+		bst_free (pkg->entries);
 		free (pkg);
 		return NULL;
 	}
@@ -241,7 +293,7 @@ pkg_package_foreach_reverse (PkgPackage *pkg,
 bool
 pkg_package_includes (PkgPackage *pkg, PkgPackageEntry *entry)
 {
-	return bst_includes (pkg->entries, entry);
+	return !!bst_find (pkg->entries, compare_entries, entry);
 }
 
 void

@@ -252,21 +252,21 @@ bst_foreach_reverse (Bst *tree, BstForeachFunc func, void *user_data)
 	TRAVERSE (right, left);
 }
 
-bool
-bst_includes (Bst *tree, void *data)
+void *
+bst_find (Bst *tree, BstCompareFunc compare_func, void *data)
 {
 	BstNode *node = tree->root;
 
 	while (node) {
-		int c = tree->compare_func (data, node->data);
+		int c = compare_func (data, node->data);
 
 		if (!c)
-			return true;
+			return node->data;
 		else if (c < 0)
 			node = node->left;
 		else
 			node = node->right;
 	}
 
-	return false;
+	return NULL;
 }

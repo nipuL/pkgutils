@@ -251,33 +251,43 @@ print_mode (mode_t mode, char *ptr)
 static void
 list_footprint_cb (PkgPackageEntry *entry, void *user_data)
 {
+	uid_t uid;
+	gid_t gid;
 	struct passwd *pw;
 	struct group *gr;
-	char mode[16], user[32], group[32];
+	char mode_buf[16], user[32], group[32];
+	mode_t mode;
 
-	print_mode (entry->mode, mode);
+	mode = pkg_package_entry_get_mode (entry);
+	print_mode (mode, mode_buf);
 
-	pw = getpwuid (entry->uid);
+	uid = pkg_package_entry_get_uid (entry);
+	pw = getpwuid (uid);
 	if (pw) {
 		strncpy (user, pw->pw_name, sizeof (user));
 		user[sizeof (user) - 1] = 0;
 	} else
-		sprintf (user, "%i", entry->uid);
+		sprintf (user, "%i", uid);
 
-	gr = getgrgid (entry->gid);
+	gid = pkg_package_entry_get_gid (entry);
+	gr = getgrgid (gid);
 	if (gr) {
 		strncpy (group, gr->gr_name, sizeof (group));
 		group[sizeof (group) - 1] = 0;
 	} else
-		sprintf (group, "%i", entry->gid);
+		sprintf (group, "%i", gid);
 
-	printf ("%s\t%s/%s\t%s", mode, user, group, &entry->name[1]);
+	printf ("%s\t%s/%s\t%s", mode_buf, user, group,
+	        &entry->name[1]);
 
-	if (S_ISLNK (entry->mode))
-		printf (" -> %s\n", "FIXME");//archive_entry_symlink
-	else if (S_ISCHR (entry->mode) || S_ISBLK (entry->mode))
-		printf ("major/minor\n");
-	else if (S_ISREG (entry->mode) && !entry->size)
+	if (S_ISLNK (mode))
+		printf (" -> %s\n", pkg_package_entry_get_symlink_target (entry));
+	else if (S_ISCHR (mode) || S_ISBLK (mode)) {
+		dev_t d;
+
+		d = pkg_package_entry_get_dev (entry);
+		printf (" (%i, %i)\n", major (d), minor (d));
+	} else if (S_ISREG (mode) && !pkg_package_entry_get_size (entry))
 		printf (" (EMPTY)\n");
 	else
 		printf ("\n");
