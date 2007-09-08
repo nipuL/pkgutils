@@ -26,8 +26,6 @@
 
 #include "pkg_package.h"
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-
 static int
 compare_entries_cb (void *a, void *b)
 {
