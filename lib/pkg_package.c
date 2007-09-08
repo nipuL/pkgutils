@@ -29,7 +29,7 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 static int
-compare_entries (void *a, void *b)
+compare_entries_cb (void *a, void *b)
 {
 	PkgPackageEntry *aa = a;
 	PkgPackageEntry *bb = b;
@@ -82,7 +82,7 @@ pkg_package_new (const char *name, const char *version, const char *release)
 		pkg->release[0] = 0;
 
 	pkg->refcount = 1;
-	pkg->entries = bst_new (compare_entries,
+	pkg->entries = bst_new (compare_entries_cb,
 	                        (BstNodeFreeFunc) pkg_package_entry_unref);
 
 	return pkg;
@@ -173,7 +173,7 @@ read_archive (PkgPackage *pkg, const char *file)
 	struct archive_entry *entry;
 	bool contains_hardlinks = false;
 
-	pkg->entries = bst_new (compare_entries,
+	pkg->entries = bst_new (compare_entries_cb,
 	                        (BstNodeFreeFunc) pkg_package_entry_unref);
 
 	archive = open_archive (file);
@@ -293,7 +293,7 @@ pkg_package_foreach_reverse (PkgPackage *pkg,
 bool
 pkg_package_includes (PkgPackage *pkg, PkgPackageEntry *entry)
 {
-	return !!bst_find (pkg->entries, compare_entries, entry);
+	return !!bst_find (pkg->entries, compare_entries_cb, entry);
 }
 
 void
