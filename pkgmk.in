@@ -43,6 +43,11 @@ get_filename() {
 	echo $FILE
 }
 
+get_basename() {
+	local FILE="`echo $1 | sed 's|^.*://.*/||g'`"
+	echo $FILE
+}
+
 check_pkgfile() {
 	if [ ! "$name" ]; then
 		error "Variable 'name' not specified in $PKGMK_PKGFILE."
@@ -82,25 +87,40 @@ download_file() {
 
 	LOCAL_FILENAME=`get_filename $1`
 	LOCAL_FILENAME_PARTIAL="$LOCAL_FILENAME.partial"
-	DOWNLOAD_CMD="--passive-ftp --no-directories --tries=3 --waitretry=3 \
-	              --directory-prefix=$PKGMK_SOURCE_DIR --output-document=$LOCAL_FILENAME_PARTIAL $1"
+	DOWNLOAD_OPTS="--passive-ftp --no-directories --tries=3 --waitretry=3 \
+		--directory-prefix=$PKGMK_SOURCE_DIR \
+		--output-document=$LOCAL_FILENAME_PARTIAL"
 
 	if [ -f "$LOCAL_FILENAME_PARTIAL" ]; then
 		info "Partial download found, trying to resume"
 		RESUME_CMD="-c"
 	fi
 
-	while true; do
-		wget $RESUME_CMD $DOWNLOAD_CMD
+	error=1
+
+	BASENAME=`get_basename $1`
+	for REPO in ${PKGMK_SOURCE_MIRRORS[@]}; do
+		REPO="`echo $REPO | sed 's|/$||'`"
+		wget $RESUME_CMD $DOWNLOAD_OPTS $REPO/$BASENAME
 		error=$?
-		if [ $error != 0 ] && [ "$RESUME_CMD" ]; then
-			info "Partial download failed, restarting"
-			rm -f "$LOCAL_FILENAME_PARTIAL"
-			RESUME_CMD=""
-		else
+		if [ $error == 0 ]; then
 			break
 		fi
 	done
+
+	if [ $error != 0 ]; then
+		while true; do
+			wget $RESUME_CMD $DOWNLOAD_OPTS $1
+			error=$?
+			if [ $error != 0 ] && [ "$RESUME_CMD" ]; then
+				info "Partial download failed, restarting"
+				rm -f "$LOCAL_FILENAME_PARTIAL"
+				RESUME_CMD=""
+			else
+				break
+			fi
+		done
+	fi
 	
 	if [ $error != 0 ]; then
 		error "Downloading '$1' failed."
@@ -633,6 +653,7 @@ PKGMK_FOOTPRINT=".footprint"
 PKGMK_MD5SUM=".md5sum"
 PKGMK_NOSTRIP=".nostrip"
 
+PKGMK_SOURCE_MIRRORS=()
 PKGMK_SOURCE_DIR="$PWD"
 PKGMK_PACKAGE_DIR="$PWD"
 PKGMK_WORK_DIR="$PWD/work"
