@@ -424,7 +424,7 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 		                           (real_filename.c_str()));
 
 		// Extract file
-		unsigned int flags = ARCHIVE_EXTRACT_OWNER | ARCHIVE_EXTRACT_PERM | ARCHIVE_EXTRACT_UNLINK;
+		unsigned int flags = ARCHIVE_EXTRACT_OWNER | ARCHIVE_EXTRACT_PERM | ARCHIVE_EXTRACT_TIME | ARCHIVE_EXTRACT_UNLINK;
 
 		if (archive_read_extract(archive, entry, flags) != ARCHIVE_OK) {
 			// If a file fails to install we just print an error message and
