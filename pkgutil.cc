@@ -393,7 +393,7 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 	    ARCHIVE_DEFAULT_BYTES_PER_BLOCK) != ARCHIVE_OK)
 		throw runtime_error_with_errno("could not open " + filename, archive_errno(archive));
 
-	chdir(root.c_str());
+	//chdir(root.c_str());
 
 	for (i = 0; archive_read_next_header(archive, &entry) ==
 	     ARCHIVE_OK; ++i) {
