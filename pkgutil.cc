@@ -384,7 +384,8 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 	struct archive* archive;
 	struct archive_entry* entry;
 	unsigned int i;
-	string absroot[PATH_MAX];
+	char buf[PATH_MAX];
+	string absroot;
 
 	archive = archive_read_new();
 	INIT_ARCHIVE(archive);
@@ -395,7 +396,7 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 		throw runtime_error_with_errno("could not open " + filename, archive_errno(archive));
 
 	chdir(root.c_str());
-	getcwd(absroot, sizeof(absroot));
+	absroot = getcwd(buf, sizeof(buf));
 
 	for (i = 0; archive_read_next_header(archive, &entry) ==
 	     ARCHIVE_OK; ++i) {
