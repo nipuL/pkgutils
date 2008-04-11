@@ -89,7 +89,7 @@ download_file() {
 	LOCAL_FILENAME_PARTIAL="$LOCAL_FILENAME.partial"
 	DOWNLOAD_OPTS="--passive-ftp --no-directories --tries=3 --waitretry=3 \
 		--directory-prefix=$PKGMK_SOURCE_DIR \
-		--output-document=$LOCAL_FILENAME_PARTIAL"
+		--output-document=$LOCAL_FILENAME_PARTIAL --no-check-certificate"
 
 	if [ -f "$LOCAL_FILENAME_PARTIAL" ]; then
 		info "Partial download found, trying to resume"
