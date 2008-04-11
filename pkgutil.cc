@@ -384,6 +384,8 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 	struct archive* archive;
 	struct archive_entry* entry;
 	unsigned int i;
+	char buf[PATH_MAX];
+	string absroot;
 
 	archive = archive_read_new();
 	INIT_ARCHIVE(archive);
@@ -394,12 +396,13 @@ void pkgutil::pkg_install(const string& filename, const set<string>& keep_list, 
 		throw runtime_error_with_errno("could not open " + filename, archive_errno(archive));
 
 	chdir(root.c_str());
+	absroot = getcwd(buf, sizeof(buf));
 
 	for (i = 0; archive_read_next_header(archive, &entry) ==
 	     ARCHIVE_OK; ++i) {
 		string archive_filename = archive_entry_pathname(entry);
-		string reject_dir = trim_filename(root + string("/") + string(PKG_REJECTED));
-		string original_filename = trim_filename(root + string("/") + archive_filename);
+		string reject_dir = trim_filename(absroot + string("/") + string(PKG_REJECTED));
+		string original_filename = trim_filename(absroot + string("/") + archive_filename);
 		string real_filename = original_filename;
 
 		// Check if file is filtered out via INSTALL
