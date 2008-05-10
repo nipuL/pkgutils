@@ -65,7 +65,7 @@ lib/%.so: $(LIB_OBJS)
 lib/%.a: $(LIB_OBJS)
 	$(QUIET_AR)$(AR) crs $@ $(LIB_OBJS)
 
-src/pkginfo: lib/libpkgutils.a $(PROGRAM_OBJS)
+src/pkginfo: $(LIBS) $(PROGRAM_OBJS)
 	$(QUIET_LINK)$(CC) $(PROGRAM_OBJS) $(PROGRAM_LDFLAGS) -o $@
 
 src/pkgrm: src/pkginfo
