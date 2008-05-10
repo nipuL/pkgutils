@@ -369,7 +369,8 @@ entry_is_referenced (PkgPackageEntry *entry, RemoveData *data)
 		 */
 		if (entry->name[entry->name_len - 1] != '/') {
 			data->included = list_find_custom (data->db->packages,
-			                                   path_is_referenced_cb, dir);
+			                                   path_is_referenced_cb,
+			                                   &dir[1]);
 			if (!data->included)
 				return false;
 		}
