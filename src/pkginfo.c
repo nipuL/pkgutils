@@ -83,7 +83,7 @@ list_files_cb (PkgPackageEntry *entry, void *user_data)
 }
 
 static int
-list_files (const char *package)
+list_files_in_database (const char *package)
 {
 	PkgDatabase *db;
 	PkgPackage *pkg;
@@ -108,6 +108,42 @@ list_files (const char *package)
 	pkg_database_unref (db);
 
 	return ret;
+}
+
+static int
+list_files_in_package (const char *file)
+{
+	PkgPackage *pkg;
+
+	pkg = pkg_package_new_from_file (file);
+	if (!pkg) {
+		fprintf (stderr, "cannot open package '%s'\n", file);
+		return 1;
+	}
+
+	pkg_package_foreach (pkg, list_files_cb, NULL);
+	pkg_package_unref (pkg);
+
+	return 0;
+}
+
+static int
+list_files (const char *package)
+{
+	struct stat st;
+	int s;
+
+	s = stat (package, &st);
+
+	/* if the argument is a regular file, then we're going to list
+	 * the contents of that archive.
+	 * otherwise we assume that it's a package name and ask the database
+	 * for that package's contents.
+	 */
+	if (!s && S_ISREG (st.st_mode))
+		return list_files_in_package (package);
+	else
+		return list_files_in_database (package);
 }
 
 static void
