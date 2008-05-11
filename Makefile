@@ -32,7 +32,7 @@ LIB_LDFLAGS := -larchive
 ifdef STATIC
 	PROGRAM_LDFLAGS := -static -Llib -lpkgutils -larchive -lz -lbz2
 else
-	PROGRAM_LDFLAGS := -Llib -lpkgutils -larchive
+	PROGRAM_LDFLAGS := -Llib -lpkgutils
 endif
 
 ifndef VERBOSE
