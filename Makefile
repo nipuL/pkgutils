@@ -69,7 +69,7 @@ src/pkginfo: $(LIBS) $(PROGRAM_OBJS)
 	$(QUIET_LINK)$(CC) $(PROGRAM_OBJS) $(PROGRAM_LDFLAGS) -o $@
 
 src/pkgrm: src/pkginfo
-	ln -s pkginfo $@
+	ln -sf pkginfo $@
 
 lib/%.o: lib/%.c
 	$(QUIET_CC)$(CC) $(CPPFLAGS) $(CFLAGS) -fvisibility=hidden -o $@ -c $<
