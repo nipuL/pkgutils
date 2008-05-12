@@ -35,7 +35,7 @@
 
 typedef struct {
 	regex_t regex;
-	int matches;
+	bool has_matches;
 	PkgPackage *pkg;
 } ListOwnerData;
 
@@ -152,14 +152,16 @@ list_owners_cb2 (PkgPackageEntry *entry, void *user_data)
 	ListOwnerData *data = user_data;
 
 	if (!regexec (&data->regex, entry->name, 0, 0, 0)) {
-		data->matches++;
+		data->has_matches = true;
 		printf ("%s %s\n", data->pkg->name, entry->name);
 	}
 }
 
 static void
-list_owners_cb (PkgPackage *pkg, ListOwnerData *data)
+list_owners_cb (PkgPackage *pkg, void *user_data)
 {
+	ListOwnerData *data = user_data;
+
 	data->pkg = pkg;
 
 	pkg_package_foreach (pkg, list_owners_cb2, data);
@@ -170,7 +172,7 @@ list_owners (const char *pattern)
 {
 	PkgDatabase *db;
 	ListOwnerData data = {
-		.matches = 0
+		.has_matches = false
 	};
 
 	if (regcomp (&data.regex, pattern, REG_EXTENDED | REG_NOSUB)) {
@@ -181,11 +183,10 @@ list_owners (const char *pattern)
 	db = open_db (false);
 
 	pkg_database_read_package_list (db, PKG_DATABASE_READ_ALL);
-	pkg_database_foreach (db, (PkgDatabaseForeachFunc) list_owners_cb,
-	                      &data);
+	pkg_database_foreach (db, list_owners_cb, &data);
 	pkg_database_unref (db);
 
-	if (!data.matches)
+	if (!data.has_matches)
 		fprintf (stderr, "no owner(s) found\n");
 
 	regfree (&data.regex);
