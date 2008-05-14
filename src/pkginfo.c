@@ -292,30 +292,30 @@ list_footprint_cb (PkgPackageEntry *entry, void *user_data)
 	gid_t gid;
 	struct passwd *pw;
 	struct group *gr;
-	char mode_buf[16], user[32], group[32];
+	char mode_buf[16];
 	mode_t mode;
 
 	mode = pkg_package_entry_get_mode (entry);
 	print_mode (mode, mode_buf);
 
+	printf ("%s\t", mode_buf);
+
 	uid = pkg_package_entry_get_uid (entry);
 	pw = getpwuid (uid);
-	if (pw) {
-		strncpy (user, pw->pw_name, sizeof (user));
-		user[sizeof (user) - 1] = 0;
-	} else
-		sprintf (user, "%i", uid);
 
 	gid = pkg_package_entry_get_gid (entry);
 	gr = getgrgid (gid);
-	if (gr) {
-		strncpy (group, gr->gr_name, sizeof (group));
-		group[sizeof (group) - 1] = 0;
-	} else
-		sprintf (group, "%i", gid);
 
-	printf ("%s\t%s/%s\t%s", mode_buf, user, group,
-	        &entry->name[1]);
+	if (pw && gr)
+		printf ("%s/%s", pw->pw_name, gr->gr_name);
+	else if (pw)
+		printf ("%s/%i", pw->pw_name, gid);
+	else if (gr)
+		printf ("%i/%s", uid, gr->gr_name);
+	else
+		printf ("%i/%i", uid, gid);
+
+	printf("\t%s", &entry->name[1]);
 
 	if (S_ISLNK (mode))
 		printf (" -> %s\n", pkg_package_entry_get_symlink_target (entry));
