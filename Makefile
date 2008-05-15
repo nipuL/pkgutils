@@ -20,7 +20,7 @@
 VERSION := 6.0.0
 
 CFLAGS ?= -O2
-CFLAGS += -std=c99 -fPIC -Wall -Wwrite-strings -Wnonnull
+CFLAGS += -std=c99 -fpic -Wall -Wwrite-strings -Wnonnull
 
 CPPFLAGS += \
 	-D_GNU_SOURCE \
