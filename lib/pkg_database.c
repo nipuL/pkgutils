@@ -93,6 +93,7 @@ pkg_database_new (const char *root, bool exclusive, int *error)
 
 	s = pkg_database_lock_init (&db->lock, fd, exclusive);
 	if (s) {
+		close (fd);
 		free (db);
 		*error = s;
 
@@ -103,6 +104,7 @@ pkg_database_new (const char *root, bool exclusive, int *error)
 	if (fd == -1) {
 		*error = errno;
 		pkg_database_lock_free (&db->lock);
+		close (db->root);
 		free (db);
 
 		return NULL;
