@@ -30,8 +30,8 @@
 
 #include "pkg_database.h"
 
-#define PKG_DIR "/var/lib/pkg"
-#define PKG_DB "/var/lib/pkg/db"
+#define PKG_DIR "var/lib/pkg"
+#define PKG_DB "db"
 #define PKG_DB_TMP PKG_DB ".incomplete_transaction"
 #define PKG_DB_BAK PKG_DB ".backup"
 
@@ -46,27 +46,20 @@ typedef struct {
 
 static int
 pkg_database_lock_init (PkgDatabaseLock *lock,
-                        const char *root, size_t root_len,
-                        bool exclusive)
+                        int root, bool exclusive)
 {
-	char path[PATH_MAX];
 	int s, flags = LOCK_NB;
 
-	/* concat root + PKG_DIR.
-	 * the caller guarantees that this won't exceed PATH_MAX bytes.
-	 */
-	memcpy (mempcpy (path, root, root_len), PKG_DIR, sizeof (PKG_DIR));
-
-	lock->dir = opendir (path);
-	if (!lock->dir)
+	lock->dir = openat (root, PKG_DIR, O_RDONLY);
+	if (lock->dir == -1)
 		return errno;
 
 	flags |= exclusive ? LOCK_EX : LOCK_SH;
 
-	s = flock (dirfd (lock->dir), flags);
+	s = flock (lock->dir, flags);
 	if (s == -1) {
 		s = errno;
-		closedir (lock->dir);
+		close (lock->dir);
 	}
 
 	return s;
@@ -75,8 +68,8 @@ pkg_database_lock_init (PkgDatabaseLock *lock,
 static void
 pkg_database_lock_free (PkgDatabaseLock *lock)
 {
-	flock (dirfd (lock->dir), LOCK_UN);
-	closedir (lock->dir);
+	flock (lock->dir, LOCK_UN);
+	close (lock->dir);
 }
 
 PKG_API
@@ -84,27 +77,21 @@ PkgDatabase *
 pkg_database_new (const char *root, bool exclusive, int *error)
 {
 	PkgDatabase *db;
-	char path[PATH_MAX] = "";
-	size_t root_len;
-	int s;
+	int s, fd;
 
-	if (root) {
-		root_len = strlen (root);
-
-		if (root_len > (PATH_MAX - 1 - strlen (PKG_DB_TMP))) {
-			*error = ENAMETOOLONG;
-			return NULL;
-		}
-	} else {
-		root = "";
-		root_len = 0;
+	fd = open (root ? root : "/", O_RDONLY);
+	if (fd == -1) {
+		*error = errno;
+		return NULL;
 	}
 
-	db = malloc (sizeof (PkgDatabase) + root_len + 1);
+	db = malloc (sizeof (PkgDatabase));
 	if (!db)
 		return NULL;
 
-	s = pkg_database_lock_init (&db->lock, root, root_len, exclusive);
+	db->root = fd;
+
+	s = pkg_database_lock_init (&db->lock, fd, exclusive);
 	if (s) {
 		free (db);
 		*error = s;
@@ -112,13 +99,8 @@ pkg_database_new (const char *root, bool exclusive, int *error)
 		return NULL;
 	}
 
-	memcpy (db->root, root, root_len);
-	db->root_len = root_len;
-
-	memcpy (mempcpy (path, root, root_len), PKG_DB, sizeof (PKG_DB));
-
-	db->fp = fopen (path, "r");
-	if (!db->fp) {
+	fd = openat (db->lock.dir, PKG_DB, O_RDONLY);
+	if (fd == -1) {
 		*error = errno;
 		pkg_database_lock_free (&db->lock);
 		free (db);
@@ -126,6 +108,7 @@ pkg_database_new (const char *root, bool exclusive, int *error)
 		return NULL;
 	}
 
+	db->fp = fdopen (fd, "r");
 	db->refcount = 1;
 	db->packages = NULL;
 
@@ -150,6 +133,7 @@ pkg_database_unref (PkgDatabase *db)
 
 	fclose (db->fp);
 	pkg_database_lock_free (&db->lock);
+	close (db->root);
 
 	while (db->packages) {
 		pkg_package_unref (db->packages->data);
@@ -388,23 +372,23 @@ remove_file_cb (PkgPackageEntry *entry, void *user_data)
 {
 	RemoveData *data = user_data;
 	PkgDatabase *db = data->db;
-	char path[PATH_MAX];
 	struct stat st;
-	int s;
+	int s, flags = 0;
 
 	if (entry_is_referenced (entry, data))
 		return;
 
-	memcpy (mempcpy (path, db->root, db->root_len),
-	        entry->name, entry->name_len + 1);
-
-	if (lstat (path, &st))
+	s = fstatat (db->root, &entry->name[1], &st, AT_SYMLINK_NOFOLLOW);
+	if (s)
 		return;
 
-	s = remove (path);
+	if (S_ISDIR (st.st_mode))
+		flags = AT_REMOVEDIR;
+
+	s = unlinkat (db->root, &entry->name[1], flags);
 	if (s == -1)
 		fprintf (stderr, "could not remove '%s': %s (%i)\n",
-		         path, strerror (errno), errno);
+		         &entry->name[1], strerror (errno), errno);
 }
 
 static void
@@ -429,32 +413,25 @@ static bool
 database_commit (PkgDatabase *db)
 {
 	FILE *fp;
-	char path[PATH_MAX], path_tmp[PATH_MAX], path_bak[PATH_MAX];
+	int fd;
 
-	/* create the temporary database */
-	memcpy (mempcpy (path_tmp, db->root, db->root_len),
-	        PKG_DB_TMP, sizeof (PKG_DB_TMP));
-
-	fp = fopen (path_tmp, "w");
-	if (!fp)
+	fd = openat (db->lock.dir, PKG_DB_TMP,
+	             O_CREAT | O_TRUNC | O_WRONLY, 0444);
+	if (fd == -1)
 		return false;
+
+	fp = fdopen (fd, "w");
 
 	pkg_database_foreach (db, write_package_cb, fp);
 
 	fflush (fp);
-	fsync (fileno (fp));
+	fsync (fd);
 	fclose (fp);
 
-	memcpy (mempcpy (path, db->root, db->root_len),
-	        PKG_DB, sizeof (PKG_DB));
+	unlinkat (db->lock.dir, PKG_DB_BAK, 0);
 
-	memcpy (mempcpy (path_bak, db->root, db->root_len),
-	        PKG_DB_BAK, sizeof (PKG_DB_BAK));
-
-	unlink (path_bak);
-	link (path, path_bak);
-
-	rename (path_tmp, path);
+	linkat (db->lock.dir, PKG_DB, db->lock.dir, PKG_DB_BAK, 0);
+	renameat (db->lock.dir, PKG_DB_TMP, db->lock.dir, PKG_DB);
 
 	return true;
 }

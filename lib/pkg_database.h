@@ -32,7 +32,7 @@
 #include "list.h"
 
 typedef struct {
-	DIR *dir;
+	int dir;
 } PkgDatabaseLock;
 
 typedef struct {
@@ -42,8 +42,7 @@ typedef struct {
 	FILE *fp;
 	List *packages;
 
-	size_t root_len;
-	char root[];
+	int root;
 } PkgDatabase;
 
 typedef enum {

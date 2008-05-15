@@ -26,7 +26,7 @@
 #define __COMMON_C
 #include "common.h"
 
-const char *progname, *root = "";
+const char *progname, *root = "/";
 
 PkgDatabase *
 open_db (bool exclusive)
