@@ -77,6 +77,12 @@ check_directory() {
 	fi
 }
 
+check_arch() {
+    if [ -f $PKGMK_ARCHFILE ]; then
+	PKGMK_ARCH="`cat $PKGMK_ARCHFILE`"
+    fi
+}
+
 download_file() {
 	info "Downloading '$1'."
 
@@ -578,6 +584,8 @@ main() {
 		exit 0
 	fi
 	
+	check_arch
+
 	for FILE in $PKGMK_PKGFILE $PKGMK_CONFFILE; do
 		if [ ! -f $FILE ]; then
 			error "File '$FILE' not found."
@@ -652,6 +660,9 @@ PKGMK_PKGFILE="Pkgfile"
 PKGMK_FOOTPRINT=".footprint"
 PKGMK_MD5SUM=".md5sum"
 PKGMK_NOSTRIP=".nostrip"
+
+PKGMK_ARCH="`uname -m`"
+PKGMK_ARCHFILE=".arch"
 
 PKGMK_SOURCE_MIRRORS=()
 PKGMK_SOURCE_DIR="$PWD"
