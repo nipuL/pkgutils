@@ -1,5 +1,6 @@
 *.swp
 man/*.8
+man/*.5
 lib/*.o
 lib/*.a
 lib/*.so
