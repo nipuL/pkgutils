@@ -47,10 +47,12 @@ pkg_package_entry_new (const char *name, size_t name_len)
 	return entry;
 }
 
-void
+PkgPackageEntry *
 pkg_package_entry_ref (PkgPackageEntry *entry)
 {
 	entry->refcount++;
+
+	return entry;
 }
 
 void

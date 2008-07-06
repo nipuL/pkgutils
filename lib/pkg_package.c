@@ -266,10 +266,12 @@ pkg_package_new_from_file (const char *file)
 }
 
 PKG_API
-void
+PkgPackage *
 pkg_package_ref (PkgPackage *pkg)
 {
 	pkg->refcount++;
+
+	return pkg;
 }
 
 PKG_API

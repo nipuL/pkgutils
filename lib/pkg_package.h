@@ -53,7 +53,7 @@ PKG_API
 PkgPackage *pkg_package_new_from_file (const char *file);
 
 PKG_API
-void pkg_package_ref (PkgPackage *pkg);
+PkgPackage *pkg_package_ref (PkgPackage *pkg);
 
 PKG_API
 void pkg_package_unref (PkgPackage *pkg);

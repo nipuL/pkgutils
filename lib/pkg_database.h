@@ -56,7 +56,7 @@ PKG_API
 PkgDatabase *pkg_database_new (const char *root, bool exclusive, int *error);
 
 PKG_API
-void pkg_database_ref (PkgDatabase *db);
+PkgDatabase *pkg_database_ref (PkgDatabase *db);
 
 PKG_API
 void pkg_database_unref (PkgDatabase *db);

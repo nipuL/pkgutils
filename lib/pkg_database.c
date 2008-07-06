@@ -120,10 +120,12 @@ pkg_database_new (const char *root, bool exclusive, int *error)
 }
 
 PKG_API
-void
+PkgDatabase *
 pkg_database_ref (PkgDatabase *db)
 {
 	db->refcount++;
+
+	return db;
 }
 
 PKG_API
@@ -240,18 +242,13 @@ PKG_API
 PkgPackage *
 pkg_database_find (PkgDatabase *db, const char *name)
 {
-	PkgPackage *pkg;
 	List *l;
 
 	l = list_find_custom (db->packages, find_package_cb, (void *) name);
 	if (!l)
 		return NULL;
 
-	pkg = l->data;
-
-	pkg_package_ref (pkg);
-
-	return pkg;
+	return pkg_package_ref (l->data);
 }
 
 PKG_API
@@ -455,13 +452,12 @@ pkg_database_add (PkgDatabase *db, PkgPackage *pkg)
 		return false;
 
 	if (!link)
-		db->packages = list_prepend (db->packages, pkg);
+		db->packages = list_prepend (db->packages,
+		                             pkg_package_ref (pkg));
 	else {
 		pkg_package_unref (link->data);
-		link->data = pkg;
+		link->data = pkg_package_ref (pkg);
 	}
-
-	pkg_package_ref (pkg);
 
 	return database_commit (db);
 }

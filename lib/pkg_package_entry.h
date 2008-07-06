@@ -32,7 +32,7 @@ typedef struct {
 
 PkgPackageEntry *pkg_package_entry_new (const char *name, size_t name_len);
 
-void pkg_package_entry_ref (PkgPackageEntry *entry);
+PkgPackageEntry *pkg_package_entry_ref (PkgPackageEntry *entry);
 void pkg_package_entry_unref (PkgPackageEntry *entry);
 
 PKG_API
