@@ -33,6 +33,8 @@
 typedef struct {
 	int refcount;
 
+	int fd;
+
 	Bst *entries;
 
 	char version[PKG_PACKAGE_MAX_VERSION_LEN + 1];
@@ -68,5 +70,6 @@ void pkg_package_foreach_reverse (PkgPackage *pkg,
 bool pkg_package_includes (PkgPackage *pkg, PkgPackageEntry *entry);
 bool pkg_package_includes_path (PkgPackage *pkg, const char *path);
 void pkg_package_add_entry (PkgPackage *pkg, PkgPackageEntry *entry);
+bool pkg_package_extract (PkgPackage *pkg, int root);
 
 #endif

@@ -21,6 +21,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <archive.h>
 #include <archive_entry.h>
 
@@ -80,6 +83,7 @@ pkg_package_new (const char *name, const char *version, const char *release)
 		pkg->release[0] = 0;
 
 	pkg->refcount = 1;
+	pkg->fd = -1;
 	pkg->entries = bst_new (compare_entries_cb,
 	                        (BstNodeFreeFunc) pkg_package_entry_unref);
 
@@ -140,22 +144,27 @@ create_from_filename (const char *path)
 	memcpy (pkg->version, hash, version_len);
 	memcpy (pkg->release, dash, release_len);
 
+	pkg->fd = -1;
+
 	return pkg;
 }
 
 static struct archive *
-open_archive (const char *file)
+open_archive (int fd, bool need_seek)
 {
 	struct archive *archive;
 	int s;
+
+	if (need_seek)
+		lseek (fd, 0, SEEK_SET);
 
 	archive = archive_read_new ();
 
 	archive_read_support_compression_all (archive);
 	archive_read_support_format_all (archive);
 
-	s = archive_read_open_filename (archive, file,
-	                                ARCHIVE_DEFAULT_BYTES_PER_BLOCK);
+	s = archive_read_open_fd (archive, fd,
+	                          ARCHIVE_DEFAULT_BYTES_PER_BLOCK);
 	if (s != ARCHIVE_OK) {
 		archive_read_finish (archive);
 		return NULL;
@@ -174,7 +183,11 @@ read_archive (PkgPackage *pkg, const char *file)
 	pkg->entries = bst_new (compare_entries_cb,
 	                        (BstNodeFreeFunc) pkg_package_entry_unref);
 
-	archive = open_archive (file);
+	pkg->fd = open (file, O_RDONLY);
+	if (pkg->fd < 0)
+		return false;
+
+	archive = open_archive (pkg->fd, false);
 	if (!archive)
 		return false;
 
@@ -199,7 +212,7 @@ read_archive (PkgPackage *pkg, const char *file)
 	if (!contains_hardlinks)
 		return true;
 
-	archive = open_archive (file);
+	archive = open_archive (pkg->fd, true);
 	if (!archive)
 		return false;
 
@@ -266,6 +279,9 @@ pkg_package_unref (PkgPackage *pkg)
 	if (--pkg->refcount)
 		return;
 
+	if (pkg->fd > -1)
+		close (pkg->fd);
+
 	bst_free (pkg->entries);
 
 	free (pkg);
@@ -305,4 +321,38 @@ void
 pkg_package_add_entry (PkgPackage *pkg, PkgPackageEntry *entry)
 {
 	bst_insert (pkg->entries, entry);
+}
+
+bool
+pkg_package_extract (PkgPackage *pkg, int root)
+{
+	struct archive *archive;
+	struct archive_entry *entry;
+	int old_pwd;
+
+	old_pwd = open (".", O_RDONLY);
+	if (old_pwd < 0)
+		return false;
+
+	archive = open_archive (pkg->fd, true);
+	if (!archive) {
+		close (old_pwd);
+		return false;
+	}
+
+	fchdir (root);
+
+	while (archive_read_next_header (archive, &entry) == ARCHIVE_OK) {
+		const int flags = ARCHIVE_EXTRACT_OWNER | ARCHIVE_EXTRACT_PERM |
+		                  ARCHIVE_EXTRACT_TIME | ARCHIVE_EXTRACT_UNLINK;
+
+		archive_read_extract (archive, entry, flags);
+	}
+
+	fchdir (old_pwd);
+	close (old_pwd);
+
+	archive_read_finish (archive);
+
+	return true;
 }

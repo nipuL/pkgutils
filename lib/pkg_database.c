@@ -440,6 +440,34 @@ database_commit (PkgDatabase *db)
 
 PKG_API
 bool
+pkg_database_add (PkgDatabase *db, PkgPackage *pkg)
+{
+	List *link;
+
+	/* find the PkgPackage object for this package */
+	link = list_find_custom (db->packages, find_package_cb,
+	                         pkg->name);
+	if (link) {
+		/* FIXME: check whether we're in upgrade mode */
+	}
+
+	if (!pkg_package_extract (pkg, db->root))
+		return false;
+
+	if (!link)
+		db->packages = list_prepend (db->packages, pkg);
+	else {
+		pkg_package_unref (link->data);
+		link->data = pkg;
+	}
+
+	pkg_package_ref (pkg);
+
+	return database_commit (db);
+}
+
+PKG_API
+bool
 pkg_database_remove (PkgDatabase *db, const char *name)
 {
 	PkgPackage *pkg;

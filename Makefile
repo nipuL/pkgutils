@@ -41,13 +41,14 @@ ifndef VERBOSE
 	QUIET_LINK = @echo '   ' LINK $@;
 endif
 
-PROGRAMS := src/pkginfo src/pkgrm
+PROGRAMS := src/pkginfo src/pkgadd src/pkgrm
 LIBS := lib/libpkgutils.so lib/libpkgutils.a
 
 PROGRAM_OBJS := \
 	src/main.o \
 	src/common.o \
 	src/pkginfo.o \
+	src/pkgadd.o \
 	src/pkgrm.o \
 
 LIB_OBJS := \
@@ -68,7 +69,7 @@ lib/%.a: $(LIB_OBJS)
 src/pkginfo: $(LIBS) $(PROGRAM_OBJS)
 	$(QUIET_LINK)$(CC) $(PROGRAM_OBJS) $(PROGRAM_LDFLAGS) -o $@
 
-src/pkgrm: src/pkginfo
+src/pkgadd src/pkgrm: src/pkginfo
 	ln -sf pkginfo $@
 
 lib/%.o: lib/%.c

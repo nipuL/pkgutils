@@ -26,6 +26,7 @@
 #include "common.h"
 
 int pkginfo (int argc, char **argv);
+int pkgadd (int argc, char **argv);
 int pkgrm (int argc, char **argv);
 
 int
@@ -35,6 +36,8 @@ main (int argc, char **argv)
 
 	if (!strcmp (progname, "pkginfo"))
 		return pkginfo (argc, argv);
+	else if (!strcmp (progname, "pkgadd"))
+		return pkgadd (argc, argv);
 	else if (!strcmp (progname, "pkgrm"))
 		return pkgrm (argc, argv);
 	else {
