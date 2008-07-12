@@ -42,7 +42,7 @@ typedef struct {
 	char name[];
 } PkgPackage;
 
-typedef void (*PkgPackageForeachFunc) (PkgPackageEntry *entry,
+typedef bool (*PkgPackageForeachFunc) (PkgPackageEntry *entry,
                                        void *user_data);
 
 PKG_API

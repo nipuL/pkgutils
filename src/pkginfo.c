@@ -76,10 +76,12 @@ list_installed ()
 	return 0;
 }
 
-static void
+static bool
 list_files_cb (PkgPackageEntry *entry, void *user_data)
 {
 	printf ("%s\n", entry->name);
+
+	return true; /* keep going */
 }
 
 static int
@@ -146,7 +148,7 @@ list_files (const char *package)
 		return list_files_in_database (package);
 }
 
-static void
+static bool
 list_owners_cb2 (PkgPackageEntry *entry, void *user_data)
 {
 	ListOwnerData *data = user_data;
@@ -155,6 +157,8 @@ list_owners_cb2 (PkgPackageEntry *entry, void *user_data)
 		data->has_matches = true;
 		printf ("%s %s\n", data->pkg->name, entry->name);
 	}
+
+	return true; /* keep going */
 }
 
 static void
@@ -285,7 +289,7 @@ print_mode (mode_t mode, char *ptr)
 	*ptr = 0;
 }
 
-static void
+static bool
 list_footprint_cb (PkgPackageEntry *entry, void *user_data)
 {
 	uid_t uid;
@@ -328,6 +332,8 @@ list_footprint_cb (PkgPackageEntry *entry, void *user_data)
 		printf (" (EMPTY)\n");
 	else
 		printf ("\n");
+
+	return true; /* keep going */
 }
 
 static int

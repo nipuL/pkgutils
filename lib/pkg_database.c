@@ -366,7 +366,7 @@ entry_is_referenced (PkgPackageEntry *entry, RemoveData *data)
 	                           entry_is_referenced_cb, entry);
 }
 
-static void
+static bool
 remove_file_cb (PkgPackageEntry *entry, void *user_data)
 {
 	RemoveData *data = user_data;
@@ -375,11 +375,11 @@ remove_file_cb (PkgPackageEntry *entry, void *user_data)
 	int s, flags = 0;
 
 	if (entry_is_referenced (entry, data))
-		return;
+		return true; /* keep going */
 
 	s = fstatat (db->root, &entry->name[1], &st, AT_SYMLINK_NOFOLLOW);
 	if (s)
-		return;
+		return true; /* keep going */
 
 	if (S_ISDIR (st.st_mode))
 		flags = AT_REMOVEDIR;
@@ -388,14 +388,18 @@ remove_file_cb (PkgPackageEntry *entry, void *user_data)
 	if (s == -1)
 		fprintf (stderr, "could not remove '%s': %s (%i)\n",
 		         &entry->name[1], strerror (errno), errno);
+
+	return true; /* keep going */
 }
 
-static void
+static bool
 write_package_cb2 (PkgPackageEntry *entry, void *user_data)
 {
 	FILE *fp = user_data;
 
 	fprintf (fp, "%s\n", &entry->name[1]);
+
+	return true; /* keep going */
 }
 
 static void

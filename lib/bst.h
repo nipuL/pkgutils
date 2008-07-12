@@ -28,7 +28,7 @@ typedef struct __Bst Bst;
 
 typedef int (*BstCompareFunc) (void *a, void *b);
 typedef void (*BstNodeFreeFunc) (void *data);
-typedef void (*BstForeachFunc) (void *data, void *user_data);
+typedef bool (*BstForeachFunc) (void *data, void *user_data);
 
 Bst *bst_new (BstCompareFunc cmp_func, BstNodeFreeFunc free_func);
 void bst_free (Bst *tree);

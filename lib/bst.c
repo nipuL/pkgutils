@@ -61,6 +61,7 @@
 
 #define TRAVERSE(left, right) \
 	BstNode *path[MAX_HEIGHT * 2], *node = tree->root; \
+	bool keep_going; \
 	int i = 0; \
 \
 	while (node) { \
@@ -75,11 +76,16 @@
 		node = path[--i]; \
 \
 		while (i && !node->right) { \
-			func (node->data, user_data); \
+			keep_going = func (node->data, user_data); \
+			if (!keep_going) \
+				return; \
+\
 			node = path[--i]; \
 		} \
 \
-		func (node->data, user_data); \
+		keep_going = func (node->data, user_data); \
+		if (!keep_going) \
+			return; \
 \
 		node = i ? path[--i] : NULL; \
 	}
