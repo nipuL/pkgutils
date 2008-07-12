@@ -36,5 +36,6 @@ int bst_insert (Bst *tree, void *data);
 void bst_foreach (Bst *tree, BstForeachFunc func, void *user_data);
 void bst_foreach_reverse (Bst *tree, BstForeachFunc func, void *user_data);
 void *bst_find (Bst *tree, BstCompareFunc func, void *data);
+void *bst_remove (Bst *tree, BstCompareFunc compare_func, void *data);
 
 #endif

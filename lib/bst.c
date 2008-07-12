@@ -34,7 +34,6 @@
 		new_root = old_root->left; \
 		old_root->left = new_root->right; \
 		new_root->right = old_root; \
-		old_root->balance = new_root->balance = 0; \
 	} while (0)
 
 /* double rotation */
@@ -151,6 +150,58 @@ node_new (void *data)
 	return node;
 }
 
+/* performs an LL rotation at the given subtree and returns
+ * the new root of that subtree.
+ */
+static BstNode *
+rotate_ll (BstNode *old_root)
+{
+	BstNode *new_root;
+
+	ROT1 (left, right);
+
+	return new_root;
+}
+
+/* performs an RR rotation at the given subtree and returns
+ * the new root of that subtree.
+ */
+static BstNode *
+rotate_rr (BstNode *old_root)
+{
+	BstNode *new_root;
+
+	ROT1 (right, left);
+
+	return new_root;
+}
+
+/* performs an LR rotation at the given subtree and returns
+ * the new root of that subtree.
+ */
+static BstNode *
+rotate_lr (BstNode *old_root)
+{
+	BstNode *new_root;
+
+	ROT2 (left, right);
+
+	return new_root;
+}
+
+/* performs an RL rotation at the given subtree and returns
+ * the new root of that subtree.
+ */
+static BstNode *
+rotate_rl (BstNode *old_root)
+{
+	BstNode *new_root;
+
+	ROT2 (right, left);
+
+	return new_root;
+}
+
 /* rebalance the given subtree.
  * return the new root of that subtree.
  */
@@ -160,15 +211,17 @@ tree_rebalance (BstNode *old_root)
 	BstNode *new_root = old_root;
 
 	if (old_root->balance > 1) {
-		if (old_root->left->balance > 0)
-			ROT1 (left, right); /* ll */
-		else
-			ROT2 (left, right); /* lr */
+		if (old_root->left->balance > 0) {
+			new_root = rotate_ll (old_root);
+			old_root->balance = new_root->balance = 0;
+		} else
+			new_root = rotate_lr (old_root);
 	} else if (old_root->balance < -1) {
-		if (old_root->right->balance < 0)
-			ROT1 (right, left); /* rr */
-		else
-			ROT2 (right, left); /* rl */
+		if (old_root->right->balance < 0) {
+			new_root = rotate_rr (old_root);
+			old_root->balance = new_root->balance = 0;
+		} else
+			new_root = rotate_rl (old_root);
 	}
 
 	return new_root;
@@ -269,4 +322,170 @@ bst_find (Bst *tree, BstCompareFunc compare_func, void *data)
 	}
 
 	return NULL;
+}
+
+static BstNode **
+get_attach_point (BstNode *node, BstNode *parent)
+{
+	return (parent->left == node) ? &parent->left : &parent->right;
+}
+
+void *
+bst_remove (Bst *tree, BstCompareFunc compare_func, void *data)
+{
+	BstNode **dest, *path[MAX_HEIGHT], *node;
+	void *removed_data;
+	int c_top[MAX_HEIGHT], i = 0;
+
+	/* find the node to remove, and store the path to that node */
+	for (node = tree->root; node;) {
+		int c = compare_func (data, node->data);
+
+		if (!c)
+			break;
+
+		c_top[i] = c;
+		path[i++] = node;
+
+		if (c < 0)
+			node = node->left;
+		else
+			node = node->right;
+	}
+
+	if (!node)
+		return NULL;
+
+	/* find out where 'node' is attached */
+	dest = i ? get_attach_point (node, path[i - 1]) : &tree->root;
+
+	/* the three cases of BST node removal follow */
+
+	if (!node->right) {
+		/* easiest case: 'node' doesn't have a right child.
+		 * we can just replace 'node' by its left child.
+		 */
+		*dest = node->left;
+	} else if (!node->right->left) {
+		/* 'node's right child doesn't have a left child, so
+		 * node->right is 'node's successor, and we can swap it in.
+		 */
+		BstNode *r = node->right;
+
+		*dest = r;
+
+		/* 'node's left child remains at the same position in the tree,
+		 * but we need to attach it to its new parent node.
+		 */
+		r->left = node->left;
+		r->balance = node->balance;
+
+		/* we might have to rebalance the subtree starting at 'r',
+		 * so record it. also note that the right subtree got shorter
+		 * there.
+		 */
+		path[i] = r;
+		c_top[i++] = 1;
+	} else {
+		/* find the successor of 'node' (the left-most right child) */
+		BstNode *s = node->right->left, *s_parent = node->right;
+		BstNode **found;
+
+		found = &path[i];
+		c_top[i++] = 1;
+
+		path[i] = s_parent;
+		c_top[i++] = -1;
+
+		while (s->left) {
+			path[i] = s;
+			c_top[i++] = -1;
+
+			s_parent = s;
+			s = s->left;
+		}
+
+		*found = *dest = s;
+
+		s_parent->left = s->right;
+		s->left = node->left;
+		s->right = node->right;
+
+		s->balance = node->balance;
+	}
+
+	/* remember what to return and free the node itself */
+	removed_data = node->data;
+	free (node);
+
+	/* now walk the path from the node that we removed back to the root.
+	 * at each step we update the current node's balance value and
+	 * rebalance the subtree if necessary.
+	 */
+	while (--i >= 0) {
+		node = path[i];
+
+		/* if we went left at this point, the deleted node
+		 * was also in the left subtree, so the left subtree
+		 * got shorter and the balance is shifting to the right
+		 * hand side.
+		 */
+		if (c_top[i] < 0) {
+			if (--node->balance == -1)
+				break;
+
+			if (node->balance == -2) {
+				BstNode *r = node->right;
+
+				if (r->balance == 1)
+					node->right = rotate_rl (r);
+				else {
+					BstNode *new_root, *old_root = node;
+
+					/* find out where 'node' is attached */
+					dest = i ? get_attach_point (node, path[i - 1])
+					         : &tree->root;
+
+					*dest = new_root = rotate_rr (node);
+
+					if (r->balance)
+						new_root->balance = old_root->balance = 0;
+					else {
+						new_root->balance = 1;
+						old_root->balance = -1;
+						break;
+					}
+				}
+			}
+		} else {
+			if (++node->balance == 1)
+				break;
+
+			if (node->balance == 2) {
+				BstNode *r = node->left;
+
+				if (r->balance == -1)
+					node->left = rotate_lr (r);
+				else {
+					BstNode *new_root, *old_root = node;
+
+					/* find out where 'node' is attached */
+					dest = i ? get_attach_point (node, path[i - 1])
+					         : &tree->root;
+
+					*dest = new_root = rotate_ll (node);
+
+					if (r->balance)
+						new_root->balance = old_root->balance = 0;
+					else {
+						new_root->balance = -1;
+						old_root->balance = 1;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	return removed_data;
 }
