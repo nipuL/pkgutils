@@ -53,7 +53,6 @@ PROGRAM_OBJS := \
 
 LIB_OBJS := \
 	lib/bst.o \
-	lib/list.o \
 	lib/pkg_package.o \
 	lib/pkg_package_entry.o \
 	lib/pkg_database.o \
