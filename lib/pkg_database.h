@@ -29,7 +29,7 @@
 #include <dirent.h>
 
 #include "pkg_package.h"
-#include "list.h"
+#include "bst.h"
 
 typedef struct {
 	int dir;
@@ -40,7 +40,7 @@ typedef struct {
 
 	PkgDatabaseLock lock;
 	FILE *fp;
-	List *packages;
+	Bst *packages;
 
 	int root;
 } PkgDatabase;
@@ -50,7 +50,7 @@ typedef enum {
 	PKG_DATABASE_READ_NAMES_ONLY,
 } PkgDatabaseReadMode;
 
-typedef void (*PkgDatabaseForeachFunc) (PkgPackage *pkg, void *user_data);
+typedef bool (*PkgDatabaseForeachFunc) (PkgPackage *pkg, void *user_data);
 
 PKG_API
 PkgDatabase *pkg_database_new (const char *root, bool exclusive, int *error);

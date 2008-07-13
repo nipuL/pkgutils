@@ -56,10 +56,12 @@ show_usage ()
 	printf (s);
 }
 
-static void
+static bool
 list_installed_cb (PkgPackage *pkg, void *user_data)
 {
 	printf ("%s %s-%s\n", pkg->name, pkg->version, pkg->release);
+
+	return true; /* keep going */
 }
 
 static int
@@ -161,7 +163,7 @@ list_owners_cb2 (PkgPackageEntry *entry, void *user_data)
 	return true; /* keep going */
 }
 
-static void
+static bool
 list_owners_cb (PkgPackage *pkg, void *user_data)
 {
 	ListOwnerData *data = user_data;
@@ -169,6 +171,8 @@ list_owners_cb (PkgPackage *pkg, void *user_data)
 	data->pkg = pkg;
 
 	pkg_package_foreach (pkg, list_owners_cb2, data);
+
+	return true; /* keep going */
 }
 
 static int

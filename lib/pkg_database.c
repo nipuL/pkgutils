@@ -35,6 +35,8 @@
 #define PKG_DB_TMP PKG_DB ".incomplete_transaction"
 #define PKG_DB_BAK PKG_DB ".backup"
 
+typedef bool (*Predicate) (PkgPackage *node_data, void *user_data);
+
 typedef struct {
 	PkgDatabase *db;
 
@@ -43,6 +45,13 @@ typedef struct {
 
 	bool included;
 } RemoveData;
+
+typedef struct {
+	Predicate predicate;
+
+	void *user_data;
+	bool found;
+} HasPackageData;
 
 static int
 pkg_database_lock_init (PkgDatabaseLock *lock,
@@ -70,6 +79,15 @@ pkg_database_lock_free (PkgDatabaseLock *lock)
 {
 	flock (lock->dir, LOCK_UN);
 	close (lock->dir);
+}
+
+static int
+compare_entries_cb (void *a, void *b)
+{
+	PkgPackage *aa = a;
+	PkgPackage *bb = b;
+
+	return strcmp (aa->name, bb->name);
 }
 
 PKG_API
@@ -112,7 +130,8 @@ pkg_database_new (const char *root, bool exclusive, int *error)
 
 	db->fp = fdopen (fd, "r");
 	db->refcount = 1;
-	db->packages = NULL;
+	db->packages = bst_new (compare_entries_cb,
+	                        (BstNodeFreeFunc) pkg_package_unref);
 
 	*error = 0;
 
@@ -139,10 +158,8 @@ pkg_database_unref (PkgDatabase *db)
 	pkg_database_lock_free (&db->lock);
 	close (db->root);
 
-	while (db->packages) {
-		pkg_package_unref (db->packages->data);
-		db->packages = list_remove_link (db->packages, db->packages);
-	}
+	if (db->packages)
+		bst_free (db->packages);
 
 	free (db);
 }
@@ -200,7 +217,7 @@ pkg_database_read_package_list (PkgDatabase *db,
 				*release++ = 0;
 
 				pkg = pkg_package_new (name, version, release);
-				db->packages = list_prepend (db->packages, pkg);
+				bst_insert (db->packages, pkg);
 
 				state = STATE_FILES;
 				break;
@@ -216,8 +233,6 @@ pkg_database_read_package_list (PkgDatabase *db,
 				break;
 		}
 	}
-
-	db->packages = list_reverse (db->packages);
 }
 
 PKG_API
@@ -225,30 +240,27 @@ void
 pkg_database_foreach (PkgDatabase *db, PkgDatabaseForeachFunc func,
                       void *user_data)
 {
-	for (List *l = db->packages; l; l = l->next)
-		func (l->data, user_data);
+	bst_foreach (db->packages, (BstForeachFunc) func, user_data);
 }
 
 static int
 find_package_cb (void *data, void *user_data)
 {
-	PkgPackage *pkg = data;
-	const char *name = (const char *) user_data;
+	PkgPackage *pkg = user_data;
+	const char *name = (const char *) data;
 
-	return strcmp (pkg->name, name);
+	return strcmp (name, pkg->name);
 }
 
 PKG_API
 PkgPackage *
 pkg_database_find (PkgDatabase *db, const char *name)
 {
-	List *l;
+	PkgPackage *pkg;
 
-	l = list_find_custom (db->packages, find_package_cb, (void *) name);
-	if (!l)
-		return NULL;
+	pkg = bst_find (db->packages, find_package_cb, (void *) name);
 
-	return pkg_package_ref (l->data);
+	return pkg ? pkg_package_ref (pkg) : NULL;
 }
 
 PKG_API
@@ -285,22 +297,20 @@ pkg_database_fill_package_files (PkgDatabase *db, PkgPackage *pkg)
 	}
 }
 
-static int
-path_is_referenced_cb (void *data, void *user_data)
+static bool
+path_is_referenced_cb (PkgPackage *pkg, void *user_data)
 {
-	PkgPackage *pkg = data;
 	const char *path = user_data;
 
-	return !pkg_package_includes_path (pkg, path);
+	return pkg_package_includes_path (pkg, path);
 }
 
-static int
-entry_is_referenced_cb (void *data, void *user_data)
+static bool
+entry_is_referenced_cb (PkgPackage *pkg, void *user_data)
 {
-	PkgPackage *pkg = data;
 	PkgPackageEntry *entry = user_data;
 
-	return !pkg_package_includes (pkg, entry);
+	return pkg_package_includes (pkg, entry);
 }
 
 static void
@@ -311,6 +321,32 @@ my_dirname (char *dir, size_t *dir_len)
 			dir[++(*dir_len)] = 0;
 			return;
 		}
+}
+
+static bool
+has_package_cb (void *node_data, void *user_data)
+{
+	HasPackageData *has_package_data = user_data;
+
+	has_package_data->found =
+		has_package_data->predicate (node_data,
+		                             has_package_data->user_data);
+
+	return !has_package_data->found;
+}
+
+static bool
+has_package (Bst *packages, Predicate predicate, void *user_data)
+{
+	HasPackageData has_package_data;
+
+	has_package_data.predicate = predicate;
+	has_package_data.user_data = user_data;
+	has_package_data.found = false;
+
+	bst_foreach (packages, has_package_cb, &has_package_data);
+
+	return has_package_data.found;
 }
 
 /* checks whether the passed entry is referenced by another
@@ -351,9 +387,9 @@ entry_is_referenced (PkgPackageEntry *entry, RemoveData *data)
 		 * is referenced by another package, and store that test result.
 		 */
 		if (entry->name[entry->name_len - 1] != '/') {
-			data->included = list_find_custom (data->db->packages,
-			                                   path_is_referenced_cb,
-			                                   &dir[1]);
+			data->included = has_package (data->db->packages,
+			                              path_is_referenced_cb,
+			                              &dir[1]);
 			if (!data->included)
 				return false;
 		}
@@ -362,8 +398,8 @@ entry_is_referenced (PkgPackageEntry *entry, RemoveData *data)
 	/* as a last resort, we check whether the actual entry is
 	 * referenced by another package.
 	 */
-	return !!list_find_custom (data->db->packages,
-	                           entry_is_referenced_cb, entry);
+	return has_package (data->db->packages,
+	                    entry_is_referenced_cb, entry);
 }
 
 static bool
@@ -402,7 +438,7 @@ write_package_cb2 (PkgPackageEntry *entry, void *user_data)
 	return true; /* keep going */
 }
 
-static void
+static bool
 write_package_cb (PkgPackage *pkg, void *user_data)
 {
 	FILE *fp = user_data;
@@ -410,6 +446,8 @@ write_package_cb (PkgPackage *pkg, void *user_data)
 	fprintf (fp, "%s\n%s-%s\n", pkg->name, pkg->version, pkg->release);
 	pkg_package_foreach (pkg, write_package_cb2, fp);
 	fprintf (fp, "\n");
+
+	return true; /* keep going */
 }
 
 static bool
@@ -443,25 +481,23 @@ PKG_API
 bool
 pkg_database_add (PkgDatabase *db, PkgPackage *pkg)
 {
-	List *link;
+	PkgPackage *pkg2;
 
 	/* find the PkgPackage object for this package */
-	link = list_find_custom (db->packages, find_package_cb,
-	                         pkg->name);
-	if (link) {
+	pkg2 = bst_find (db->packages, find_package_cb, pkg->name);
+	if (pkg2) {
 		/* FIXME: check whether we're in upgrade mode */
 	}
 
 	if (!pkg_package_extract (pkg, db->root))
 		return false;
 
-	if (!link)
-		db->packages = list_prepend (db->packages,
-		                             pkg_package_ref (pkg));
-	else {
-		pkg_package_unref (link->data);
-		link->data = pkg_package_ref (pkg);
+	if (pkg2) {
+		bst_remove (db->packages, find_package_cb, pkg->name);
+		pkg_package_unref (pkg2);
 	}
+
+	bst_insert (db->packages, pkg_package_ref (pkg));
 
 	return database_commit (db);
 }
@@ -472,17 +508,10 @@ pkg_database_remove (PkgDatabase *db, const char *name)
 {
 	PkgPackage *pkg;
 	RemoveData remove_data;
-	List *link;
 
-	/* find the PkgPackage object for this package */
-	link = list_find_custom (db->packages, find_package_cb,
-	                         (void *) name);
-	if (!link)
+	pkg = bst_remove (db->packages, find_package_cb, (void *) name);
+	if (!pkg)
 		return false;
-
-	pkg = link->data;
-
-	db->packages = list_remove_link (db->packages, link);
 
 	/* remove the files/directories in this package */
 	remove_data.db = db;
