@@ -237,8 +237,7 @@ int
 bst_insert (Bst *tree, void *data)
 {
 	BstNode *node, *node2, *top, *node_parent, *top_parent;
-	int8_t c_top[MAX_HEIGHT];
-	int i = 0;
+	int i = 0, c_top[MAX_HEIGHT];
 
 	if (!tree->root) {
 		tree->root = node_new (data);
