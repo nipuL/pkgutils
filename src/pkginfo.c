@@ -59,21 +59,33 @@ show_usage ()
 static bool
 list_installed_cb (PkgPackage *pkg, void *user_data)
 {
-	printf ("%s %s-%s\n", pkg->name, pkg->version, pkg->release);
+	regex_t *regex = user_data;
+
+	if (!regex || !regexec (regex, pkg->name, 0, 0, 0))
+		printf ("%s %s-%s\n", pkg->name, pkg->version, pkg->release);
 
 	return true; /* keep going */
 }
 
 static int
-list_installed ()
+list_installed (const char *pattern)
 {
 	PkgDatabase *db;
+	regex_t regex;
 
 	db = open_db (false);
 
+	if (pattern && regcomp (&regex, pattern, REG_EXTENDED | REG_NOSUB)) {
+		fprintf (stderr, "invalid pattern '%s'\n", pattern);
+		return 1;
+	}
+
 	pkg_database_read_package_list (db, PKG_DATABASE_READ_NAMES_ONLY);
-	pkg_database_foreach (db, list_installed_cb, NULL);
+	pkg_database_foreach (db, list_installed_cb, pattern ? &regex : NULL);
 	pkg_database_unref (db);
+
+	if (pattern)
+		regfree (&regex);
 
 	return 0;
 }
@@ -362,7 +374,7 @@ pkginfo (int argc, char **argv)
 {
 	int c;
 	struct option options[] = {
-		{ "installed", no_argument, NULL, 'i' },
+		{ "installed", optional_argument, NULL, 'i' },
 		{ "list", required_argument, NULL, 'l' },
 		{ "owner", required_argument, NULL, 'o' },
 		{ "footprint", required_argument, NULL, 'f' },
@@ -373,7 +385,7 @@ pkginfo (int argc, char **argv)
 	};
 
 	while (true) {
-		c = getopt_long (argc, argv, "il:o:f:r:vh", options, NULL);
+		c = getopt_long (argc, argv, "i::l:o:f:r:vh", options, NULL);
 		if (c == -1)
 			break;
 
@@ -381,7 +393,13 @@ pkginfo (int argc, char **argv)
 			case '?':
 				return 1;
 			case 'i':
-				return list_installed ();
+				/* extract the optional argument */
+				if (!optarg && argc > optind && argv[optind][0] != '-') {
+					optarg = argv[optind];
+					optind++;
+				}
+
+				return list_installed (optarg);
 			case 'l':
 				return list_files (optarg);
 			case 'o':

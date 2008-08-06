@@ -9,8 +9,9 @@ information about software packages that are installed on the system
 or that reside in a particular directory.
 .SH OPTIONS
 .TP
-.B "\-i, \-\-installed"
-List installed packages and their version.
+.B "\-i, \-\-installed [pattern]"
+List installed packages and their version. If the optional regular expression
+pattern is specified, only matching packages are listed.
 .TP
 .B "\-l, \-\-list <package|file>"
 List files owned by the specified <package> or contained in <file>.
