@@ -32,7 +32,10 @@ int pkgrm (int argc, char **argv);
 int
 main (int argc, char **argv)
 {
-	progname = basename (argv[0]);
+	char *slash;
+
+	slash = strrchr (argv[0], '/');
+	progname = slash ? slash + 1 : argv[0];
 
 	if (!strcmp (progname, "pkginfo"))
 		return pkginfo (argc, argv);

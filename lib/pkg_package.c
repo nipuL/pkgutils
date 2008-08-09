@@ -94,11 +94,13 @@ static PkgPackage *
 create_from_filename (const char *path)
 {
 	PkgPackage *pkg;
-	char buf[PATH_MAX], *hash, *dash, *suffix;
+	char buf[PATH_MAX], *slash, *hash, *dash, *suffix;
 	const char *file;
 	size_t len, name_len, version_len, release_len;
 
-	file = basename (path);
+	slash = strrchr (path, '/');
+	file = slash ? slash + 1 : path;
+
 	len = strlen (file);
 
 	if (len < strlen (".pkg.tar.") || len >= sizeof (buf))

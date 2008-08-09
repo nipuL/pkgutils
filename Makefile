@@ -23,7 +23,9 @@ CFLAGS ?= -O2
 CFLAGS += -std=c99 -fpic -Wall -Wwrite-strings -Wnonnull
 
 CPPFLAGS += \
-	-D_GNU_SOURCE \
+	-D_ATFILE_SOURCE \
+	-D_POSIX_C_SOURCE \
+	-D_BSD_SOURCE \
 	-DVERSION=\"$(VERSION)\" \
 	-DPKG_API="__attribute__ ((visibility(\"default\")))"
 
