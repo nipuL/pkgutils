@@ -34,13 +34,11 @@ error() {
 }
 
 get_filename() {
-	local FILE="`echo $1 | sed 's|^.*://.*/||g'`"
-
-	if [ "$FILE" != "$1" ]; then
-		FILE="$PKGMK_SOURCE_DIR/$FILE"
+	if [[ $1 =~ ^(http|https|ftp|file)://.*/(.+) ]]; then
+		echo "$PKGMK_SOURCE_DIR/${BASH_REMATCH[2]}"
+	else
+		echo $1
 	fi
-
-	echo $FILE
 }
 
 get_basename() {
