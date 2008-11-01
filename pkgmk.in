@@ -101,7 +101,7 @@ download_file() {
 	BASENAME=`get_basename $1`
 	for REPO in ${PKGMK_SOURCE_MIRRORS[@]}; do
 		REPO="`echo $REPO | sed 's|/$||'`"
-		wget $RESUME_CMD $DOWNLOAD_OPTS $REPO/$BASENAME
+		wget $RESUME_CMD $DOWNLOAD_OPTS $PKGMK_WGET_OPTS $REPO/$BASENAME
 		error=$?
 		if [ $error == 0 ]; then
 			break
@@ -110,7 +110,7 @@ download_file() {
 
 	if [ $error != 0 ]; then
 		while true; do
-			wget $RESUME_CMD $DOWNLOAD_OPTS $1
+			wget $RESUME_CMD $DOWNLOAD_OPTS $PKGMK_WGET_OPTS $1
 			error=$?
 			if [ $error != 0 ] && [ "$RESUME_CMD" ]; then
 				info "Partial download failed, restarting"

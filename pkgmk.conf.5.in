@@ -39,6 +39,10 @@ Set directory for building packages.
 .br
 Default: '\fBfoo\fP/work', where \fBfoo\fP is the directory of the Pkgfile.
 .TP
+\fBPKGMK_WGET_OPTS='STRING'\fP
+Additional options for wget(1), which is used by pkgmk to download all files.
+.br
+.TP
 \fBPKGMK_DOWNLOAD='STRING'\fP
 If set to 'yes', pkgmk will download the source archives if necessary.
 .br
@@ -56,6 +60,6 @@ Default: 'no'
 .SH SEE ALSO
 pkgmk(8)
 .SH COPYRIGHT
-pkgmk (pkgutils) is Copyright (c) 2000-2005 Per Liden and Copyright (c) 2006-2007 CRUX team (http://crux.nu).
+pkgmk (pkgutils) is Copyright (c) 2000-2005 Per Liden and Copyright (c) 2006-2008 CRUX team (http://crux.nu).
 pkgmk (pkgutils) is licensed through the GNU General Public License.
 Read the COPYING file for the complete license.
