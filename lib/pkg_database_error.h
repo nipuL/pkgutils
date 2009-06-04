@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef PKG_DATABASE_ERROR_H
-#define PKG_DATABASE_ERROR_H
+#ifndef __PKG_DATABASE_ERROR_H
+#define __PKG_DATABASE_ERROR_H
 
 #define PKG_DATABASE_ERROR 1
 #define PKG_DATABASE_PKG_NOT_FOUND 2
@@ -26,4 +26,4 @@
 
 #define PKG_DATABASE_TODO 127
 
-#endif // PKG_DATABASE_ERROR_H
+#endif // __PKG_DATABASE_ERROR_H
