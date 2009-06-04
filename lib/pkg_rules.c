@@ -36,6 +36,7 @@ pkg_rules_from_file(char *file, int *error) {
 
   if ((fp = fopen(file, "r")) == NULL) {
     *error = errno;
+    free (rules);
     return NULL;
   }
 
