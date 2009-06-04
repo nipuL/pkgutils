@@ -479,7 +479,7 @@ database_commit (PkgDatabase *db)
 }
 
 PKG_API
-bool
+int
 pkg_database_add (PkgDatabase *db, PkgPackage *pkg)
 {
 	PkgPackage *pkg2;
@@ -487,11 +487,11 @@ pkg_database_add (PkgDatabase *db, PkgPackage *pkg)
 	/* find the PkgPackage object for this package */
 	pkg2 = bst_find (db->packages, find_package_cb, pkg->name);
 	if (pkg2) {
-		/* FIXME: check whether we're in upgrade mode */
+	  return PKG_DATABASE_PKG_INSTALLED;
 	}
 
 	if (!pkg_package_extract (pkg, db->root))
-		return false;
+	  return (int) false;
 
 	if (pkg2) {
 		bst_remove (db->packages, find_package_cb, pkg->name);
@@ -500,7 +500,7 @@ pkg_database_add (PkgDatabase *db, PkgPackage *pkg)
 
 	bst_insert (db->packages, pkg_package_ref (pkg));
 
-	return database_commit (db);
+	return (int) database_commit (db);
 }
 
 PKG_API

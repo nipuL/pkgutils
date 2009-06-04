@@ -67,9 +67,8 @@ doit (const char *file)
 
 	pkg_database_read_package_list (db, PKG_DATABASE_READ_ALL);
 
-	if (!pkg_database_add (db, pkg)) {
+	if ((ret = pkg_database_add (db, pkg))) {
 		fprintf (stderr, "could not install package '%s'\n", file);
-		ret = 1;
 	}
 
 	pkg_package_unref (pkg);
