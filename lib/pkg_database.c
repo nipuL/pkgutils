@@ -480,13 +480,15 @@ database_commit (PkgDatabase *db)
 
 PKG_API
 int
-pkg_database_add (PkgDatabase *db, PkgPackage *pkg)
+pkg_database_add (PkgDatabase *db, PkgPackage *pkg, bool upgrade, bool force)
 {
 	PkgPackage *pkg2;
 
 	/* find the PkgPackage object for this package */
 	pkg2 = bst_find (db->packages, find_package_cb, pkg->name);
 	if (pkg2) {
+	  if (upgrade)
+	    return PKG_DATABASE_TODO;
 	  return PKG_DATABASE_PKG_INSTALLED;
 	}
 

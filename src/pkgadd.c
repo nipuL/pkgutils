@@ -33,6 +33,8 @@
 
 #include "common.h"
 
+bool force, upgrade;
+
 static void
 show_usage ()
 {
@@ -67,7 +69,7 @@ doit (const char *file)
 
 	pkg_database_read_package_list (db, PKG_DATABASE_READ_ALL);
 
-	if ((ret = pkg_database_add (db, pkg))) {
+	if ((ret = pkg_database_add (db, pkg, upgrade, force))) {
 		fprintf (stderr, "could not install package '%s'\n", file);
 	}
 
@@ -99,10 +101,10 @@ pkgadd (int argc, char **argv)
 			case '?':
 				return 1;
 			case 'u':
-				// FIXME: upgrade
+			        upgrade = true;
 				break;
 			case 'f':
-				// FIXME: force
+			        force = true;
 				break;
 			case 'r':
 				root = optarg;

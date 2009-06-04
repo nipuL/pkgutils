@@ -77,7 +77,7 @@ PKG_API
 void pkg_database_fill_package_files (PkgDatabase *db, PkgPackage *pkg);
 
 PKG_API
-int pkg_database_add (PkgDatabase *db, PkgPackage *pkg);
+int pkg_database_add (PkgDatabase *db, PkgPackage *pkg, bool upgrade, bool force);
 
 PKG_API
 int pkg_database_remove (PkgDatabase *db, const char *name);
