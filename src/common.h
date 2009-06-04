@@ -26,6 +26,7 @@
 
 #ifndef __COMMON_C
 extern const char *progname, *root;
+extern const bool force, upgrade
 #endif
 
 PkgDatabase *open_db (bool exclusive);
