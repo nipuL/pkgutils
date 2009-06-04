@@ -40,8 +40,7 @@ pkg_rules_from_file(char *file, int *error) {
   }
 
   while ((fgets (buf, sizeof (buf), fp))) {
-    rule = pkg_rule_from_string(buf);
-    if (rule != NULL)
+    if ((rule = pkg_rule_from_string(buf)) != NULL)
       rules = list_prepend(rules, rule);
   }
   return rules;
