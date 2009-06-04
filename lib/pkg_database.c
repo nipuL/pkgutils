@@ -491,7 +491,7 @@ pkg_database_add (PkgDatabase *db, PkgPackage *pkg)
 	}
 
 	if (!pkg_package_extract (pkg, db->root))
-	  return (int) false;
+	  return !(int) false;
 
 	if (pkg2) {
 		bst_remove (db->packages, find_package_cb, pkg->name);
@@ -500,7 +500,7 @@ pkg_database_add (PkgDatabase *db, PkgPackage *pkg)
 
 	bst_insert (db->packages, pkg_package_ref (pkg));
 
-	return (int) database_commit (db);
+	return !(int) database_commit (db);
 }
 
 PKG_API
@@ -522,5 +522,5 @@ pkg_database_remove (PkgDatabase *db, const char *name)
 	pkg_package_foreach_reverse (pkg, remove_file_cb, &remove_data);
 	pkg_package_unref (pkg);
 
-	return (int) database_commit (db);
+	return !(int) database_commit (db);
 }
