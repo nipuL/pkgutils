@@ -29,6 +29,7 @@
 #include <dirent.h>
 
 #include "pkg_package.h"
+#include "pkg_database_error.h"
 #include "bst.h"
 
 typedef struct {
@@ -79,6 +80,6 @@ PKG_API
 bool pkg_database_add (PkgDatabase *db, PkgPackage *pkg);
 
 PKG_API
-bool pkg_database_remove (PkgDatabase *db, const char *name);
+int pkg_database_remove (PkgDatabase *db, const char *name);
 
 #endif

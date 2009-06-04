@@ -29,6 +29,7 @@
 #include <errno.h>
 
 #include "pkg_database.h"
+#include "pkg_database_error.h"
 
 #define PKG_DIR "var/lib/pkg"
 #define PKG_DB "db"
@@ -503,7 +504,7 @@ pkg_database_add (PkgDatabase *db, PkgPackage *pkg)
 }
 
 PKG_API
-bool
+int
 pkg_database_remove (PkgDatabase *db, const char *name)
 {
 	PkgPackage *pkg;
@@ -511,7 +512,7 @@ pkg_database_remove (PkgDatabase *db, const char *name)
 
 	pkg = bst_remove (db->packages, find_package_cb, (void *) name);
 	if (!pkg)
-		return false;
+		return PKG_DATABASE_PKG_NOT_FOUND;
 
 	/* remove the files/directories in this package */
 	remove_data.db = db;
@@ -521,5 +522,5 @@ pkg_database_remove (PkgDatabase *db, const char *name)
 	pkg_package_foreach_reverse (pkg, remove_file_cb, &remove_data);
 	pkg_package_unref (pkg);
 
-	return database_commit (db);
+	return (int) database_commit (db);
 }

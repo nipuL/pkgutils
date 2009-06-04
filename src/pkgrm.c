@@ -58,9 +58,8 @@ doit (const char *name)
 
 	pkg_database_read_package_list (db, PKG_DATABASE_READ_ALL);
 
-	if (!pkg_database_remove (db, name)) {
+	if ((ret = pkg_database_remove (db, name))) {
 		fprintf (stderr, "could not remove package '%s'\n", name);
-		ret = 1;
 	}
 
 	pkg_database_unref (db);
