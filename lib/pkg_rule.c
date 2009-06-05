@@ -25,9 +25,11 @@
 #include <limits.h>
 #include <errno.h>
 
-#include "pkg_rules.h"
+#include "pkg_rule.h"
 #include "list.h"
 #include "utils.h"
+
+static const char *PkgRuleTypeStrings[N_RULE_TYPES] = { "INSTALL", "UPGRADE" };
 
 PkgRuleType
 get_pkg_rule_type (char *string)
@@ -43,7 +45,7 @@ get_pkg_rule_type (char *string)
 
 PKG_API
 List *
-pkg_rule_list_from_file (char *file, int *error)
+pkg_rule_list_from_file (const char *file, int *error)
 {
 	PkgRule *rule;
 	List *rules_list = NULL;
@@ -67,7 +69,7 @@ PKG_API
 PkgRule *
 pkg_rule_from_string(char *string) {
 	PkgRule *rule;
-	char token[PKG_RULES_BUF_MAX], *ptr;
+	char token[PKG_RULE_BUF_MAX], *ptr;
 	regex_t re;
 	
 	if ((rule = malloc (sizeof (PkgRule))) == NULL) {

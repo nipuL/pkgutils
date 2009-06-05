@@ -21,16 +21,14 @@
 #include <regex.h>
 #include "list.h"
 
-#ifndef __PKG_RULES_H
-#define __PKG_RULES_H
+#ifndef __PKG_RULE_H
+#define __PKG_RULE_H
 
 #define PKG_RULES "etc/pkgadd.conf"
 
-#define PKG_RULES_BUF_MAX 256
+#define PKG_RULE_BUF_MAX 256
 
 typedef enum { UPGRADE, INSTALL, N_RULE_TYPES } PkgRuleType;
-
-static const char *PkgRuleTypeStrings[N_RULE_TYPES] = { "INSTALL", "UPGRADE" };
 
 typedef struct {
 	PkgRuleType type;
@@ -38,7 +36,12 @@ typedef struct {
 	void *data;
 } PkgRule;
 
-List *pkg_rule_list_from_file (char *file, int *error);
+#ifndef __PKG_RULE_C
+#define __PKG_RULE_C
+extern List *pkg_rule_list;
+#endif
+
+List *pkg_rule_list_from_file (const char *file, int *error);
 PkgRule *pkg_rule_from_string (char *string);
 
 #endif
