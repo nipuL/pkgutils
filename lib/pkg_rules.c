@@ -99,7 +99,7 @@ pkg_rule_from_string(char *string) {
 
   /* First token is rule type */
   ptr = get_token(token, string);
-  if (token[0] = '#')
+  if (token[0] == '#')
     return NULL;
   if ((rule->type = get_pkg_rule_type(token)) == -1)
     return NULL;
