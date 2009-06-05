@@ -33,7 +33,7 @@ typedef enum { UPGRADE, INSTALL, N_RULE_TYPES } PkgRuleType;
 static const char *PkgRuleTypeStrings[N_RULE_TYPES] = { "INSTALL", "UPGRADE" };
 
 typedef struct {
-	Pkgruletype type;
+	PkgRuleType type;
 	regex_t regex;
 	void *data;
 } PkgRule;

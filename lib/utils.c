@@ -20,7 +20,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "util.h"
+#include "utils.h"
 
 char *
 lstrip (char *buf)
