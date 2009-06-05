@@ -44,11 +44,11 @@ get_pkg_rule_type (char *string)
 }
 
 PKG_API
-List *
+PkgRuleList
 pkg_rule_list_from_file (const char *file, int *error)
 {
 	PkgRule *rule;
-	List *rules_list = NULL;
+	PkgRuleList rules_list = NULL;
 	FILE *fp;
 	char buf[PATH_MAX];
 	

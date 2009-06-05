@@ -28,6 +28,8 @@
 
 #define PKG_RULE_BUF_MAX 256
 
+typedef List *PkgRuleList;
+
 typedef enum { UPGRADE, INSTALL, N_RULE_TYPES } PkgRuleType;
 
 typedef struct {
@@ -36,12 +38,7 @@ typedef struct {
 	void *data;
 } PkgRule;
 
-#ifndef __PKG_RULE_C
-#define __PKG_RULE_C
-extern List *pkg_rule_list;
-#endif
-
-List *pkg_rule_list_from_file (const char *file, int *error);
+PkgRuleList pkg_rule_list_from_file (const char *file, int *error);
 PkgRule *pkg_rule_from_string (char *string);
 
 #endif
