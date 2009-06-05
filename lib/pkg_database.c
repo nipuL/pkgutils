@@ -500,11 +500,6 @@ pkg_database_add (PkgDatabase *db, PkgPackage *pkg, bool upgrade, bool force)
 	if (!pkg_package_extract (pkg, db->root))
 		return !(int) false;
 
-	if (pkg2) {
-		bst_remove (db->packages, find_package_cb, pkg->name);
-		pkg_package_unref (pkg2);
-	}
-
 	bst_insert (db->packages, pkg_package_ref (pkg));
 
 	return !(int) database_commit (db);
