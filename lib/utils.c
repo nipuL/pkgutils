@@ -17,31 +17,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include <ctype.h>
+#include <string.h>
 
-#include <regex.h>
-#include "list.h"
+char *lstrip(char *buf) {
+  while (*buf && (isspace(*buf) || isblank(*buf)))
+    buf++;
+  return buf;
+  
+}
 
-#ifndef __PKG_RULES_H
-#define __PKG_RULES_H
+#warning FIXME: Handle escaped spaces 
+char *get_token(char *token, char *buf) {
+  char *p1 = lstrip(buf);
+  char *p2 = p1;
+  int n = 0;
 
-#define PKG_RULES "etc/pkgadd.conf"
+  while (*p2 && !(isspace(*p2) || isblank(*p2))) {
+    p2++;
+    n++;
+  }
 
-#define PKG_RULES_BUF_MAX 256
+  memcpy(token, p1, n);
 
-typedef enum { UPGRADE, INSTALL, N_RULE_TYPES } PkgRuleType;
-
-static const char *PkgRuleTypeStrings[N_RULE_TYPES] = { "INSTALL", "UPGRADE" };
-
-typedef struct {
-  PkgRuleType type;
-  regex_t regex;
-  void *data;
-} PkgRule;
-
-List *pkg_rule_list_from_file(char *file, int *error);
-PkgRule *pkg_rule_from_string(char *string);
-
-char *lstrip(char *buf);
-char *get_token(char *token, char *buf);
-
-#endif // __PKG_RULES_H
+  return p2;
+}

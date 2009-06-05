@@ -59,7 +59,8 @@ LIB_OBJS := \
 	lib/pkg_package.o \
 	lib/pkg_package_entry.o \
 	lib/pkg_database.o \
-	lib/pkg_rules.o
+	lib/pkg_rules.o \
+	lib/utils.o
 
 all: $(LIBS) $(PROGRAMS)
 

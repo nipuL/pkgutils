@@ -27,30 +27,7 @@
 
 #include "pkg_rules.h"
 #include "list.h"
-
-char *lstrip(char *buf) {
-  char *p = buf;
-  while (p[0] == ' ' && p[0] != '\0')
-    *p++;
-  return p;
-}
-
-#warning FIXME: Handle escaped spaces 
-char *get_token(char *buf, char *token) {
-  int n = 0;
-  char *ptr = lstrip(buf);
-  char *p = ptr;
-
-  while (p[0] != ' ' && p[0] != '\0') {
-    n++;
-    *p++;
-  }
-  
-  memcpy(token, ptr, n);
-  token[n] = '\0';
-
-  return p;
-}    
+#include "utils.h"
 
 PkgRuleType get_pkg_rule_type(char *string) {
   int i;
@@ -63,7 +40,7 @@ PkgRuleType get_pkg_rule_type(char *string) {
 
 PKG_API
 List *
-pkg_rules_from_file(char *file, int *error) {
+pkg_rule_list_from_file(char *file, int *error) {
   PkgRule *rule;
   List *rules_list;
   FILE *fp;
@@ -82,8 +59,10 @@ pkg_rules_from_file(char *file, int *error) {
 
   while ((fgets (buf, sizeof (buf), fp))) {
     if ((rule = pkg_rule_from_string(buf)) != NULL)
-      rules_list = list_prepend(rules_list, (void *)rule);
+      //rules_list = list_prepend(rules_list, (void *)rule);
+      printf("got a rule!");
   }
+  return NULL;
   return rules_list;
 }
 
@@ -94,13 +73,22 @@ pkg_rule_from_string(char *string) {
   char token[PKG_RULES_BUF_MAX], *ptr;
   regex_t re;
   
-  if ((rule = malloc (sizeof (PkgRule))) == NULL)
+  if ((rule = malloc (sizeof (PkgRule))) == NULL) {
     return NULL;
+  }
+
+  ptr = lstrip(string);
+  printf("processing line: %s", ptr);
+
+  if (ptr[0] == '#' || ptr[0] == '\n') {
+    printf("\tignore line\n");
+    return NULL;
+  }
 
   /* First token is rule type */
-  ptr = get_token(token, string);
-  if (token[0] == '#')
-    return NULL;
+  ptr = get_token(token, ptr);
+  printf("\tfirst token: '%s'\n", token);
+
   if ((rule->type = get_pkg_rule_type(token)) == -1)
     return NULL;
 
@@ -111,7 +99,7 @@ pkg_rule_from_string(char *string) {
   rule->regex = re;
 
   /* Remainder is unprocessed user data */
-  rule->user_data = (void *) lstrip(ptr);
+  rule->data = (void *) lstrip(ptr);
 
   return rule;
 }

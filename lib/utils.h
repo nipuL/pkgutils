@@ -18,30 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <regex.h>
-#include "list.h"
-
-#ifndef __PKG_RULES_H
-#define __PKG_RULES_H
-
-#define PKG_RULES "etc/pkgadd.conf"
-
-#define PKG_RULES_BUF_MAX 256
-
-typedef enum { UPGRADE, INSTALL, N_RULE_TYPES } PkgRuleType;
-
-static const char *PkgRuleTypeStrings[N_RULE_TYPES] = { "INSTALL", "UPGRADE" };
-
-typedef struct {
-  PkgRuleType type;
-  regex_t regex;
-  void *data;
-} PkgRule;
-
-List *pkg_rule_list_from_file(char *file, int *error);
-PkgRule *pkg_rule_from_string(char *string);
+#ifndef __UTILS_H
+#define __UTILS_H
 
 char *lstrip(char *buf);
 char *get_token(char *token, char *buf);
 
-#endif // __PKG_RULES_H
+#endif
