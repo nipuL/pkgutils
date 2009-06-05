@@ -42,12 +42,13 @@ PKG_API
 List *
 pkg_rule_list_from_file(char *file, int *error) {
   PkgRule *rule;
-  List *rules_list;
+  List *rules_list = malloc (sizeof (List));
   FILE *fp;
   char buf[PATH_MAX];
 
-  if ((rules_list = malloc (sizeof (List))) == NULL) {
+  if (rules_list == NULL) {
     *error = errno;
+    free(rules_list);
     return NULL;
   }
 
@@ -78,20 +79,25 @@ pkg_rule_from_string(char *string) {
 
   ptr = lstrip(string);
 
-  if (ptr[0] == '#' || ptr[0] == '\n') {
+  if (*ptr == '#' || *ptr == '\n') {
+    free (rule);
     return NULL;
   }
 
   /* First token is rule type */
   ptr = get_token(token, ptr);
 
-  if ((rule->type = get_pkg_rule_type(token)) == -1)
+  if ((rule->type = get_pkg_rule_type(token)) == -1) {
+    free (rule);
     return NULL;
+  }
 
   /* Second token is regex */
   ptr = get_token(token, ptr);
-  if ((regcomp(&re, token, 0)))
+  if ((regcomp(&re, token, 0))) {
+    free (rule);
     return NULL;
+  }
   rule->regex = re;
 
   /* Remainder is unprocessed user data */
