@@ -488,9 +488,13 @@ pkg_database_add (PkgDatabase *db, PkgPackage *pkg, bool upgrade, bool force)
 	/* find the PkgPackage object for this package */
 	pkg2 = bst_find (db->packages, find_package_cb, pkg->name);
 	if (pkg2) {
-		if (upgrade)
-			if (ret = pkg_database_remove (db, pkg2->name)
-			    return ret;
+		if (upgrade) {
+			if (ret = pkg_database_remove (db, pkg2->name))
+				return ret;
+			pkg_package_unref (pkg2);
+		} else {
+			return PKG_DATABASE_PKG_INSTALLED;
+		}
 	}
 
 	if (!pkg_package_extract (pkg, db->root))
