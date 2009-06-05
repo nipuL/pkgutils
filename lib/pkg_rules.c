@@ -35,7 +35,7 @@ char *lstrip(char *buf) {
   return p;
 }
 
-/* FIXME: Handle escaped spaces */
+#warning FIXME: Handle escaped spaces 
 char *get_token(char *buf, char *token) {
   int n = 0;
   char *ptr = lstrip(buf);

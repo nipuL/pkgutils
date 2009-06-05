@@ -194,7 +194,7 @@ pkg_database_read_package_list (PkgDatabase *db,
 				max_len = PKG_PACKAGE_MAX_NAME_LEN;
 
 				if (buf_len > max_len) {
-					/* FIXME: invalid */
+#warning FIXME: invalid 
 				}
 
 				memcpy (name, buf, buf_len + 1);
@@ -205,14 +205,14 @@ pkg_database_read_package_list (PkgDatabase *db,
 				          PKG_PACKAGE_MAX_RELEASE_LEN;
 
 				if (buf_len > max_len) {
-					/* FIXME: invalid */
+#warning FIXME: invalid 
 				}
 
 				version = buf;
 
 				release = strchr (version, '-');
 				if (!release) {
-					/* FIXME: invalid */
+#warning FIXME: invalid 
 				}
 
 				*release++ = 0;
