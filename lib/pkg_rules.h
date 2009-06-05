@@ -26,7 +26,11 @@
 
 #define PKG_RULES "etc/pkgadd.conf"
 
+#define PKG_RULES_BUF_MAX 256
+
 typedef enum { UPGRADE, INSTALL, N_RULE_TYPES } PkgRuleType;
+
+const char *PkgRuleTypeStrings[N_RULE_TYPES] = { "INSTALL", "UPGRADE" };
 
 typedef struct {
   PkgRuleType type;
