@@ -20,26 +20,32 @@
 #include <ctype.h>
 #include <string.h>
 
-char *lstrip(char *buf) {
-  while (*buf && (isspace(*buf) || isblank(*buf)))
-    buf++;
-  return buf;
-  
+#include "util.h"
+
+char *
+lstrip (char *buf)
+{
+	while (*buf && (isspace (*buf) || isblank (*buf)))
+		buf++;
+
+	return buf;
 }
 
 #warning FIXME: Handle escaped spaces 
-char *get_token(char *token, char *buf) {
-  char *p1 = lstrip(buf);
-  char *p2 = p1;
-  int n = 0;
-
-  while (*p2 && !(isspace(*p2) || isblank(*p2))) {
-    p2++;
-    n++;
-  }
-
-  memcpy(token, p1, n);
-  token[n] = '\0';
-
-  return p2;
+char *
+get_token (char *token, char *buf)
+{
+	char *p1 = lstrip (buf);
+	char *p2 = p1;
+	int n = 0;
+	
+	while (*p2 && !(isspace (*p2) || isblank (*p2))) {
+		p2++;
+		n++;
+	}
+	
+	memcpy (token, p1, n);
+	token[n] = '\0';
+	
+	return p2;
 }

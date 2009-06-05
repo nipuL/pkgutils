@@ -21,7 +21,7 @@
 #ifndef __UTILS_H
 #define __UTILS_H
 
-char *lstrip(char *buf);
-char *get_token(char *token, char *buf);
+char *lstrip (char *buf);
+char *get_token (char *token, char *buf);
 
 #endif

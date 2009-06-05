@@ -1,5 +1,5 @@
 /*
- * pkgutils
+ * Pkgutils
  *
  * Copyright (c) 2000-2005 Per Liden
  * Copyright (c) 2007 by CRUX team (http://crux.nu)
@@ -29,72 +29,76 @@
 #include "list.h"
 #include "utils.h"
 
-PkgRuleType get_pkg_rule_type(char *string) {
-  int i;
-  for (i=0; i < N_RULE_TYPES; i++) {
-    if (strcmp(string, PkgRuleTypeStrings[i]) == 0)
-      return i;
-  }
-  return -1;
+PkgRuleType
+get_pkg_rule_type (char *string)
+{
+	int i;
+	for (i=0; i < N_RULE_TYPES; i++) {
+		if (strcmp (string, PkgRuleTypeStrings[i]) == 0)
+			return i;
+	}
+
+	return -1;
 }
 
 PKG_API
 List *
-pkg_rule_list_from_file(char *file, int *error) {
-  PkgRule *rule;
-  List *rules_list = NULL;
-  FILE *fp;
-  char buf[PATH_MAX];
-
-  if ((fp = fopen(file, "r")) == NULL) {
-    *error = errno;
-    return NULL;
-  }
-    
-  while ((fgets (buf, sizeof (buf), fp))) {
-    if ((rule = pkg_rule_from_string(buf)) != NULL)
-      rules_list = list_prepend(rules_list, (void *)rule);
-  }
-
-  return rules_list;
+pkg_rule_list_from_file (char *file, int *error)
+{
+	PkgRule *rule;
+	List *rules_list = NULL;
+	FILE *fp;
+	char buf[PATH_MAX];
+	
+	if ((fp = fopen (file, "r")) == NULL) {
+		*error = errno;
+		return NULL;
+	}
+	
+	while ((fgets (buf, sizeof (buf), fp))) {
+		if ((rule = pkg_rule_from_string (buf)) != NULL)
+			rules_list = list_prepend (rules_list, (void *) rule);
+	}
+	
+	return rules_list;
 }
 
 PKG_API
 PkgRule *
 pkg_rule_from_string(char *string) {
-  PkgRule *rule;
-  char token[PKG_RULES_BUF_MAX], *ptr;
-  regex_t re;
-  
-  if ((rule = malloc (sizeof (PkgRule))) == NULL) {
-    return NULL;
-  }
-
-  ptr = lstrip(string);
-
-  if (*ptr == '#' || *ptr == '\n') {
-    free (rule);
-    return NULL;
-  }
-
-  /* First token is rule type */
-  ptr = get_token(token, ptr);
-
-  if ((rule->type = get_pkg_rule_type(token)) == -1) {
-    free (rule);
-    return NULL;
-  }
-
-  /* Second token is regex */
-  ptr = get_token(token, ptr);
-  if ((regcomp(&re, token, 0))) {
-    free (rule);
-    return NULL;
-  }
-  rule->regex = re;
-
-  /* Remainder is unprocessed user data */
-  rule->data = (void *) lstrip(ptr);
-
-  return rule;
+	PkgRule *rule;
+	char token[PKG_RULES_BUF_MAX], *ptr;
+	regex_t re;
+	
+	if ((rule = malloc (sizeof (PkgRule))) == NULL) {
+		return NULL;
+	}
+	
+	ptr = lstrip (string);
+	
+	if (*ptr == '#' || *ptr == '\n') {
+		free (rule);
+		return NULL;
+	}
+	
+	/* First token is rule type */
+	ptr = get_token (token, ptr);
+	
+	if ((rule->type = get_pkg_rule_type (token)) == -1) {
+		free (rule);
+		return NULL;
+	}
+	
+	/* Second token is regex */
+	ptr = get_token (token, ptr);
+	if ((regcomp (&re, token, 0))) {
+		free (rule);
+		return NULL;
+	}
+	rule->regex = re;
+	
+	/* Remainder is unprocessed user data */
+	rule->data = (void *) lstrip (ptr);
+	
+	return rule;
 }
