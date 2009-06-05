@@ -39,6 +39,7 @@ char *get_token(char *token, char *buf) {
   }
 
   memcpy(token, p1, n);
+  token[n] = '\0';
 
   return p2;
 }

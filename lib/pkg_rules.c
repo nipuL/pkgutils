@@ -59,8 +59,7 @@ pkg_rule_list_from_file(char *file, int *error) {
 
   while ((fgets (buf, sizeof (buf), fp))) {
     if ((rule = pkg_rule_from_string(buf)) != NULL)
-      //rules_list = list_prepend(rules_list, (void *)rule);
-      printf("got a rule!");
+      rules_list = list_prepend(rules_list, (void *)rule);
   }
   return NULL;
   return rules_list;
@@ -78,16 +77,13 @@ pkg_rule_from_string(char *string) {
   }
 
   ptr = lstrip(string);
-  printf("processing line: %s", ptr);
 
   if (ptr[0] == '#' || ptr[0] == '\n') {
-    printf("\tignore line\n");
     return NULL;
   }
 
   /* First token is rule type */
   ptr = get_token(token, ptr);
-  printf("\tfirst token: '%s'\n", token);
 
   if ((rule->type = get_pkg_rule_type(token)) == -1)
     return NULL;
