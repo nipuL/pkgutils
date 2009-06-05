@@ -101,10 +101,10 @@ pkgadd (int argc, char **argv)
 			case '?':
 				return 1;
 			case 'u':
-			        upgrade = true;
+				upgrade = true;
 				break;
 			case 'f':
-			        force = true;
+				force = true;
 				break;
 			case 'r':
 				root = optarg;
