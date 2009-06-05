@@ -22,5 +22,6 @@
 #define __PKGUTILS_H
 
 #include "pkg_database.h"
+#include "pkg_rule.h"
 
 #endif
