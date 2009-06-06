@@ -55,6 +55,8 @@ doit (const char *file)
 {
 	PkgDatabase *db;
 	PkgPackage *pkg;
+	PkgRuleList *rule_list;
+
 	int ret = 0;
 
 	pkg = pkg_package_new_from_file (file);
