@@ -20,6 +20,7 @@
 
 #include <regex.h>
 #include "list.h"
+#include "pkg_package.h"
 
 #ifndef __PKG_RULE_H
 #define __PKG_RULE_H

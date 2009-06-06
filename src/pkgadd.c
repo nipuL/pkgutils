@@ -65,6 +65,11 @@ doit (const char *file)
 		return 1;
 	}
 
+	rule_list = pkg_rule_list_from_file (PKG_RULES);
+
+	if (rule_list)
+		pkg_rule_apply (pkg, rule_list);
+
 	ignore_signals ();
 
 	db = open_db (true);

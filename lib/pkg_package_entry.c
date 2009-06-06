@@ -20,6 +20,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <archive.h>
 #include <archive_entry.h>
 
@@ -43,6 +44,9 @@ pkg_package_entry_new (const char *name, size_t name_len)
 	entry->name_len = name_len + 1;
 	entry->refcount = 1;
 	entry->archive_entry = NULL;
+
+	entry->install = true;
+	entry->upgrade = true;
 
 	return entry;
 }

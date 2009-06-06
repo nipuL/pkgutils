@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
+
 #ifndef __PKG_PACKAGE_ENTRY_H
 #define __PKG_PACKAGE_ENTRY_H
 
@@ -26,8 +28,12 @@ typedef struct {
 
 	void *archive_entry;
 
+	bool install;
+	bool upgrade;
+
 	size_t name_len;
 	char name[];
+
 } PkgPackageEntry;
 
 PkgPackageEntry *pkg_package_entry_new (const char *name, size_t name_len);

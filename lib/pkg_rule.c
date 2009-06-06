@@ -62,7 +62,7 @@ pkg_rule_list_from_file (const char *file)
 			rules_list = list_prepend (rules_list, (void *) rule);
 	}
 	
-	return rules_list;
+	return list_reverse (rules_list);
 }
 
 PKG_API
@@ -100,7 +100,71 @@ pkg_rule_from_string(char *string) {
 	rule->regex = re;
 	
 	/* Remainder is unprocessed user data */
-	rule->data = (void *) lstrip (ptr);
+	rule->data = (void *) strip (ptr);
 	
 	return rule;
+}
+
+bool
+apply_install_rule (PkgPackageEntry *entry, PkgRule* rule)
+{
+	switch ((char *)rule->data) {
+	case "YES":
+		entry->install = True;
+		break;
+	case "NO":
+		entry->install = False;
+		break;
+	default:
+		return false;
+	}
+	return true;
+}
+
+bool
+apply_upgrade_rule (PkgPackageEntry *entry, PkgRule *rule)
+{
+	switch ((char *)rule->data) {
+	case "YES":
+		entry->upgrade = True;
+		break;
+	case "NO":
+		entry->upgrade = False;
+		break;
+	default:
+		return false;
+	}
+	return true;
+}
+
+bool 
+apply_rule (void *data, void *user_data)
+{
+	PkgRule *rule;
+	PkgRuleList *rule_list = (PkgRuleList *) user_data;
+	PkgPackageEntry *entry = (PkgPackageEntry *) data;
+
+	while (rule_list) {
+		rule = (PkgRule *) rule_list->data;
+		if (!regexec(&rule->regex, &entry->name[1], 0, NULL, 0)) {
+			rule = (PkgRule *) rule_list->data;
+			switch (rule->type) {
+			case INSTALL:
+				apply_install_rule (entry, rule);
+				break;
+			case UPGRADE:
+				apply_install_rule (entry, rule);
+				break;
+			}
+		}
+		rule_list = rule_list->next;
+	}
+	return true;
+}
+
+PKG_API
+void
+pkg_rule_apply (PkgPackage *pkg, PkgRuleList *rule_list)
+{
+	bst_foreach (pkg->entries, apply_rule, rule_list);
 }
