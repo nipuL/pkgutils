@@ -108,32 +108,24 @@ pkg_rule_from_string(char *string) {
 bool
 apply_install_rule (PkgPackageEntry *entry, PkgRule* rule)
 {
-	switch ((char *)rule->data) {
-	case "YES":
-		entry->install = True;
-		break;
-	case "NO":
-		entry->install = False;
-		break;
-	default:
+	if (!strcmp ("YES", (char *) rule->data))
+		entry->install = true;
+	else if (!strcmp ("NO", (char *) rule->data))
+		entry->install = false;
+	else
 		return false;
-	}
 	return true;
 }
 
 bool
 apply_upgrade_rule (PkgPackageEntry *entry, PkgRule *rule)
 {
-	switch ((char *)rule->data) {
-	case "YES":
-		entry->upgrade = True;
-		break;
-	case "NO":
-		entry->upgrade = False;
-		break;
-	default:
+	if (!strcmp ("YES", (char *) rule->data))
+		entry->upgrade = true;
+	else if (!strcmp ("NO", (char *) rule->data))
+		entry->upgrade = false;
+	else
 		return false;
-	}
 	return true;
 }
 
