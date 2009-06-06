@@ -31,6 +31,21 @@ lstrip (char *buf)
 	return buf;
 }
 
+char *
+rstrip(char *buf)
+{
+	int n = strlen (buf) -1;
+	while ((n > 0) && (isspace (*buf) || isblank (*buf)))
+		buf[n--] = '\0';
+	return buf;
+}		     
+	
+char *
+strip(char *buf)
+{
+	return rstrip (lstrip (buf));
+}
+
 #warning FIXME: Handle escaped spaces 
 char *
 get_token (char *token, char *buf)
