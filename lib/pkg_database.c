@@ -485,8 +485,6 @@ pkg_database_add (PkgDatabase *db, PkgPackage *pkg, bool upgrade, bool force)
 	PkgPackage *pkg2;
 	int ret;
 
-	/* apply install rules */
-
 	/* find the PkgPackage object for this package */
 	pkg2 = bst_find (db->packages, find_package_cb, pkg->name);
 	if (pkg2) {
