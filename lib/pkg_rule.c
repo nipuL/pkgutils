@@ -147,6 +147,8 @@ apply_rule (void *data, void *user_data)
 			case UPGRADE:
 				apply_upgrade_rule (entry, rule);
 				break;
+			default:
+			  return false;
 			}
 		}
 		rule_list = rule_list->next;
