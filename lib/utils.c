@@ -25,7 +25,7 @@
 char *
 lstrip (char *buf)
 {
-	while (*buf && (isspace (*buf) || isblank (*buf)))
+	while (*buf && isspace (*buf))
 		buf++;
 
 	return buf;
@@ -35,7 +35,7 @@ char *
 rstrip(char *buf)
 {
 	int n = strlen (buf) -1;
-	while ((n > 0) && (isspace (*buf) || isblank (*buf)))
+	while ((n > 0) && isspace (*buf))
 		buf[n--] = '\0';
 	return buf;
 }		     
@@ -54,7 +54,7 @@ get_token (char *token, char *buf)
 	char *p2 = p1;
 	int n = 0;
 	
-	while (*p2 && !(isspace (*p2) || isblank (*p2))) {
+	while (*p2 && !isspace (*p2)) {
 		p2++;
 		n++;
 	}
