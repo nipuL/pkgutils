@@ -153,7 +153,7 @@ apply_rule (void *data, void *user_data)
 				apply_install_rule (entry, rule);
 				break;
 			case UPGRADE:
-				apply_install_rule (entry, rule);
+				apply_upgrade_rule (entry, rule);
 				break;
 			}
 		}
