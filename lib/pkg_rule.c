@@ -65,6 +65,22 @@ pkg_rule_list_from_file (const char *file)
 	return list_reverse (rules_list);
 }
 
+bool
+process_install_data (char *str)
+{
+ 	if (!strcmp ("YES", str))
+		return true;
+	return false;
+}
+
+bool
+process_upgrade_data (char *str)
+{
+ 	if (!strcmp ("YES", str))
+		return true;
+	return false;
+}
+
 PKG_API
 PkgRule *
 pkg_rule_from_string(char *string) {
@@ -99,34 +115,19 @@ pkg_rule_from_string(char *string) {
 	}
 	rule->regex = re;
 	
-	/* Remainder is unprocessed user data */
-	rule->data = (void *) strip (ptr);
-	
+	/* The rest is data for the fule */
+	switch (rule->type) {
+	case INSTALL:
+		rule->data = (void *) process_install_data (strip (ptr));
+		break;
+	case UPGRADE:
+		rule->data = (void *) process_upgrade_data (strip (ptr));
+		break;
+	default:
+		rule->data = NULL;
+	}
+
 	return rule;
-}
-
-bool
-apply_install_rule (PkgPackageEntry *entry, PkgRule* rule)
-{
-	if (!strcmp ("YES", (char *) rule->data))
-		entry->install = true;
-	else if (!strcmp ("NO", (char *) rule->data))
-		entry->install = false;
-	else
-		return false;
-	return true;
-}
-
-bool
-apply_upgrade_rule (PkgPackageEntry *entry, PkgRule *rule)
-{
-	if (!strcmp ("YES", (char *) rule->data))
-		entry->upgrade = true;
-	else if (!strcmp ("NO", (char *) rule->data))
-		entry->upgrade = false;
-	else
-		return false;
-	return true;
 }
 
 bool 
@@ -142,10 +143,10 @@ apply_rule (void *data, void *user_data)
 			rule = (PkgRule *) rule_list->data;
 			switch (rule->type) {
 			case INSTALL:
-				apply_install_rule (entry, rule);
+				entry->install = (bool) rule->data;
 				break;
 			case UPGRADE:
-				apply_upgrade_rule (entry, rule);
+				entry->upgrade = (bool) rule->data;
 				break;
 			default:
 			  return false;
